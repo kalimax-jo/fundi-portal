@@ -3,15 +3,21 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\User;
 
 class DashboardTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
-     * Ensure the dashboard page is accessible.
+     * Authenticated users can access the dashboard.
      */
-    public function test_dashboard_page_is_accessible(): void
+    public function test_authenticated_user_can_view_dashboard(): void
     {
-        $response = $this->get('/dashboard');
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertStatus(200);
         $response->assertSee('User Dashboard');
