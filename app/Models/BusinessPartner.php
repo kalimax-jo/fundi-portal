@@ -16,28 +16,40 @@ class BusinessPartner extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'name',
-        'type',
-        'license_number',
-        'registration_number',
-        'contact_person',
-        'contact_email',
-        'contact_phone',
-        'address',
-        'logo',
-        'partnership_start_date',
-        'partnership_status',
-        'billing_type',
-        'discount_percentage'
-    ];
+    'name',
+    'email',
+    'phone',
+    'website',
+    'type',
+    'tier',
+    'license_number',
+    'registration_number',
+    'contact_person',
+    'contact_email',
+    'contact_phone',
+    'address',
+    'city',
+    'country',
+    'logo',
+    'partnership_start_date',
+    'contract_end_date',
+    'partnership_status',
+    'billing_type',
+    'billing_cycle',
+    'discount_percentage',
+    'credit_limit',
+    'notes'
+];
 
     /**
      * The attributes that should be cast.
      */
     protected $casts = [
-        'partnership_start_date' => 'date',
-        'discount_percentage' => 'decimal:2',
-    ];
+    'partnership_start_date' => 'date',
+    'contract_end_date' => 'date',
+    'discount_percentage' => 'decimal:2',
+    'credit_limit' => 'decimal:2',
+];
 
     // =============================================
     // RELATIONSHIPS
@@ -68,6 +80,9 @@ class BusinessPartner extends Model
     {
         return $this->hasMany(PartnerBilling::class);
     }
+
+
+    
 
     // =============================================
     // SCOPES
@@ -362,6 +377,23 @@ class BusinessPartner extends Model
     /**
      * Get partner statistics
      */
+
+
+     /**
+ * Get the primary contact user (attribute accessor)
+ */
+public function getPrimaryContactAttribute()
+{
+    return $this->users()->wherePivot('is_primary_contact', true)->first();
+}
+
+/**
+ * Check if partner has a primary contact
+ */
+public function hasPrimaryContact(): bool
+{
+    return $this->users()->wherePivot('is_primary_contact', true)->exists();
+}
     public function getStatistics(): array
     {
         return [

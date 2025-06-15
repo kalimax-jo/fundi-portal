@@ -1,13 +1,11 @@
 <?php
 
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 
 Route::get('/', function () {
     return view('welcome');
 });
-
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
@@ -17,20 +15,6 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::view('/dashboard', 'dashboard')->middleware('auth')->name('dashboard');
 
 // Admin Routes (Protected by admin middleware)
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // Admin Dashboard
-    Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
-    
-    // User Management
-    Route::resource('users', App\Http\Controllers\Admin\UserController::class);
-    Route::post('users/{user}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
-    Route::post('users/{user}/assign-role', [App\Http\Controllers\Admin\UserController::class, 'assignRole'])->name('users.assign-role');
-    Route::delete('users/{user}/remove-role/{role}', [App\Http\Controllers\Admin\UserController::class, 'removeRole'])->name('users.remove-role');
-    
-    // Add other admin routes here as we build them...
-});
-
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
     // Admin Dashboard
@@ -55,9 +39,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Business Partner Management
     Route::resource('business-partners', App\Http\Controllers\Admin\BusinessPartnerController::class);
-    Route::post('business-partners/{partner}/toggle-status', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'toggleStatus'])->name('business-partners.toggle-status');
-    Route::get('business-partners/{partner}/users', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'users'])->name('business-partners.users');
-    Route::post('business-partners/{partner}/add-user', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'addUser'])->name('business-partners.add-user');
+    Route::post('business-partners/{businessPartner}/toggle-status', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'toggleStatus'])->name('business-partners.toggle-status');
+    Route::get('business-partners/{businessPartner}/users', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'users'])->name('business-partners.users');
+    Route::post('business-partners/{businessPartner}/add-user', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'addUser'])->name('business-partners.add-user');
+    
+    // Business Partner User Management Routes
+    Route::post('business-partners/{businessPartner}/users/{user}/set-primary', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'setPrimaryContact'])->name('business-partners.set-primary-contact');
+    Route::delete('business-partners/{businessPartner}/users/{user}/remove', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'removeUser'])->name('business-partners.remove-user');
+    Route::patch('business-partners/{businessPartner}/users/{user}/update-access', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'updateUserAccess'])->name('business-partners.update-user-access');
     
     // Inspection Request Management
     Route::resource('inspection-requests', App\Http\Controllers\Admin\InspectionRequestController::class);
@@ -100,7 +89,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('profile', [App\Http\Controllers\Admin\ProfileController::class, 'show'])->name('profile');
     Route::put('profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
 
-      Route::prefix('assignments')->name('assignments.')->group(function () {
+    // Assignment Management
+    Route::prefix('assignments')->name('assignments.')->group(function () {
         // Assignment workflow interface
         Route::get('/', [App\Http\Controllers\Admin\AssignmentController::class, 'index'])->name('index');
         
