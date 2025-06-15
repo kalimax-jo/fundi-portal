@@ -520,6 +520,24 @@ public function setPrimaryContact(User $user)
     }
 
     /**
+     * Calculate discounted price based on partner discounts.
+     */
+    public function calculateDiscountedPrice(float $price): float
+    {
+        $discount = $this->discount_percentage;
+
+        // Apply volume discount if it's greater than the set discount
+        $suggested = $this->getSuggestedDiscountPercentage();
+        if ($suggested > $discount) {
+            $discount = $suggested;
+        }
+
+        return $discount > 0
+            ? $price * (1 - ($discount / 100))
+            : $price;
+    }
+
+    /**
      * Create default business partners for Rwanda
      */
     public static function createDefaultPartners(): array
