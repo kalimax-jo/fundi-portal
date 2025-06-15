@@ -177,7 +177,7 @@ class InspectorController extends Controller
      */
     public function show(Inspector $inspector)
     {
-        $inspector->load(['user', 'certifications']);
+        $inspector->load(['user']);
 
         // Get inspector statistics
         $stats = [
@@ -412,4 +412,21 @@ class InspectorController extends Controller
             'safety_gear' => 'Safety Equipment',
         ];
     }
+
+
+    /**
+     * Get inspector assignments overview
+     */
+    public function assignmentsOverview(Request $request)
+    {
+        $inspectors = Inspector::with(['user'])
+            ->where('availability_status', '!=', 'offline')
+            ->orderBy('availability_status')
+            ->orderBy('rating', 'desc')
+            ->get();
+
+        // This will be expanded when we have inspection requests
+        return view('admin.inspectors.assignments', compact('inspectors'));
+    }
+
 }

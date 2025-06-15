@@ -99,4 +99,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Profile Management
     Route::get('profile', [App\Http\Controllers\Admin\ProfileController::class, 'show'])->name('profile');
     Route::put('profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
+
+      Route::prefix('assignments')->name('assignments.')->group(function () {
+        // Assignment workflow interface
+        Route::get('/', [App\Http\Controllers\Admin\AssignmentController::class, 'index'])->name('index');
+        
+        // Manual assignment
+        Route::post('/assign', [App\Http\Controllers\Admin\AssignmentController::class, 'assign'])->name('assign');
+        
+        // Auto-assignment
+        Route::post('/auto-assign', [App\Http\Controllers\Admin\AssignmentController::class, 'autoAssign'])->name('auto-assign');
+        
+        // Assignment management
+        Route::post('/unassign', [App\Http\Controllers\Admin\AssignmentController::class, 'unassign'])->name('unassign');
+        Route::post('/reassign', [App\Http\Controllers\Admin\AssignmentController::class, 'reassign'])->name('reassign');
+        
+        // Assignment statistics
+        Route::get('/statistics', [App\Http\Controllers\Admin\AssignmentController::class, 'statistics'])->name('statistics');
+    });
 });

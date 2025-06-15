@@ -50,40 +50,47 @@
                 </li>
 
                 <!-- Inspector Management -->
-                <li>
-                    <div x-data="{ open: {{ request()->routeIs('admin.inspectors.*') ? 'true' : 'false' }} }">
-                        <button @click="open = !open" 
-                                class="group flex w-full items-center gap-x-3 rounded-md p-2 text-left text-sm leading-6 font-semibold {{ request()->routeIs('admin.inspectors.*') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
-                            <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Inspector Management
-                            <svg class="ml-auto h-5 w-5 shrink-0 transition-transform" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                            </svg>
-                        </button>
-                        <ul x-show="open" x-transition class="mt-1 px-2 space-y-1">
-                            <li>
-                                <a href="{{ route('admin.inspectors.index') }}" 
-                                   class="group flex gap-x-3 rounded-md py-2 pl-6 pr-2 text-sm leading-6 {{ request()->routeIs('admin.inspectors.index') || request()->routeIs('admin.inspectors.show') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
-                                    All Inspectors
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.inspectors.create') }}" 
-                                   class="group flex gap-x-3 rounded-md py-2 pl-6 pr-2 text-sm leading-6 {{ request()->routeIs('admin.inspectors.create') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
-                                    Add Inspector
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('admin.inspectors.assignments') }}" 
-                                   class="group flex gap-x-3 rounded-md py-2 pl-6 pr-2 text-sm leading-6 {{ request()->routeIs('admin.inspectors.assignments') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
-                                    Assignments
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
+                <!-- Inspector Management -->
+<li>
+    <div x-data="{ open: {{ request()->routeIs('admin.inspectors.*') || request()->routeIs('admin.assignments.*') ? 'true' : 'false' }} }">
+        <button @click="open = !open" 
+                class="group flex w-full items-center gap-x-3 rounded-md p-2 text-left text-sm leading-6 font-semibold {{ request()->routeIs('admin.inspectors.*') || request()->routeIs('admin.assignments.*') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
+            <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Inspector Management
+            <svg class="ml-auto h-5 w-5 shrink-0 transition-transform" :class="open ? 'rotate-90' : ''" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+        </button>
+        <ul x-show="open" x-transition class="mt-1 px-2 space-y-1">
+            <li>
+                <a href="{{ route('admin.inspectors.index') }}" 
+                   class="group flex gap-x-3 rounded-md py-2 pl-6 pr-2 text-sm leading-6 {{ request()->routeIs('admin.inspectors.index') || request()->routeIs('admin.inspectors.show') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
+                    All Inspectors
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('admin.inspectors.create') }}" 
+                   class="group flex gap-x-3 rounded-md py-2 pl-6 pr-2 text-sm leading-6 {{ request()->routeIs('admin.inspectors.create') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
+                    Add Inspector
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('admin.inspectors.assignments') }}" 
+                   class="group flex gap-x-3 rounded-md py-2 pl-6 pr-2 text-sm leading-6 {{ request()->routeIs('admin.inspectors.assignments') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
+                    Assignments Overview
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('admin.assignments.index') }}" 
+                   class="group flex gap-x-3 rounded-md py-2 pl-6 pr-2 text-sm leading-6 {{ request()->routeIs('admin.assignments.*') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
+                    Assignment Workflow
+                </a>
+            </li>
+        </ul>
+    </div>
+</li>
 
                 <!-- Business Partners -->
                 <li>
