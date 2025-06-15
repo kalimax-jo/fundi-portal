@@ -457,4 +457,3 @@ class AuthController extends Controller
 
         return array_unique($permissions);
     }
-}
