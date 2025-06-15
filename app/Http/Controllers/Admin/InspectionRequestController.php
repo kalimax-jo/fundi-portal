@@ -124,13 +124,31 @@ class InspectionRequestController extends Controller
         $properties = Property::all();
         $packages = InspectionPackage::active()->get();
         $businessPartners = BusinessPartner::active()->get();
-        $users = User::where('status', 'active')->get();
+
+        // Active individual clients
+        $individualUsers = User::active()->byRole('individual_client')->get();
+
+        // Map of partner ID => active users for form dropdowns
+        $businessPartnerUsers = [];
+        foreach ($businessPartners as $partner) {
+            $businessPartnerUsers[$partner->id] = $partner->users()
+                ->active()
+                ->get()
+                ->map(function (User $user) {
+                    return [
+                        'id' => $user->id,
+                        'full_name' => $user->full_name,
+                        'email' => $user->email,
+                    ];
+                });
+        }
 
         return view('admin.inspection-requests.create', compact(
-            'properties', 
-            'packages', 
-            'businessPartners', 
-            'users'
+            'properties',
+            'packages',
+            'businessPartners',
+            'individualUsers',
+            'businessPartnerUsers'
         ));
     }
 
