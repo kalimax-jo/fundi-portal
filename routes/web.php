@@ -57,7 +57,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Inspection Request Management
     Route::resource('inspection-requests', App\Http\Controllers\Admin\InspectionRequestController::class);
     Route::get('inspection-requests-pending', [App\Http\Controllers\Admin\InspectionRequestController::class, 'pending'])->name('inspection-requests.pending');
-    Route::get('inspection-requests-assign', [App\Http\Controllers\Admin\InspectionRequestController::class, 'assignInspectors'])->name('inspection-requests.assign');
+    Route::get('inspection-requests-assign', [App\Http\Controllers\Admin\InspectionRequestController::class, 'assign'])->name('inspection-requests.assign');
     Route::post('inspection-requests/{request}/assign-inspector', [App\Http\Controllers\Admin\InspectionRequestController::class, 'assignInspector'])->name('inspection-requests.assign-inspector');
     Route::post('inspection-requests/{request}/update-status', [App\Http\Controllers\Admin\InspectionRequestController::class, 'updateStatus'])->name('inspection-requests.update-status');
     

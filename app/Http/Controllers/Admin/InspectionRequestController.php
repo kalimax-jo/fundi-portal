@@ -167,11 +167,11 @@ class InspectionRequestController extends Controller
             'urgency' => 'required|in:normal,urgent,emergency',
             'preferred_date' => 'nullable|date|after:today',
             'preferred_time_slot' => 'required|in:morning,afternoon,evening,flexible',
-            'special_instructions' => 'nullable|string|max:1000',
+             'special_instructions' => 'nullable|string|max:1000',
             'loan_amount' => 'nullable|numeric|min:0',
             'loan_reference' => 'nullable|string|max:100',
             'applicant_name' => 'nullable|string|max:255',
-            'applicant_phone' => 'nullable|string|max:20',
+            'applicant_phone' => 'nullable|string|max:20'
         ]);
 
         if ($validator->fails()) {
