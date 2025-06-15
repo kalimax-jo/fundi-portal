@@ -37,7 +37,7 @@
     <form method="POST" action="{{ route('inspection-requests.store') }}" class="space-y-6">
         @csrf
 
-        @if(!$isIndividual)
+        @if(isset($isIndividual) && !$isIndividual)
             <!-- Enhanced Property Selection -->
             <div>
                 <div class="flex items-center justify-between mb-2">
