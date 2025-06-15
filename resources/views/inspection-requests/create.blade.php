@@ -7,18 +7,46 @@
     <h2 class="text-xl font-semibold mb-4">Request Inspection</h2>
     <form method="POST" action="{{ route('inspection-requests.store') }}" class="space-y-6">
         @csrf
-        <div>
-            <label for="property_id" class="block text-sm font-medium text-gray-700">Property</label>
-            <select name="property_id" id="property_id" required class="mt-1 block w-full border-gray-300 rounded-md">
-                <option value="">Choose property...</option>
-                @foreach($properties as $property)
-                    <option value="{{ $property->id }}" {{ old('property_id') == $property->id ? 'selected' : '' }}>
-                        {{ $property->property_code }} - {{ $property->address }}
-                    </option>
-                @endforeach
-            </select>
-            @error('property_id')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
-        </div>
+        @if(!$isIndividual)
+            <div>
+                <label for="property_id" class="block text-sm font-medium text-gray-700">Property</label>
+                <select name="property_id" id="property_id" required class="mt-1 block w-full border-gray-300 rounded-md">
+                    <option value="">Choose property...</option>
+                    @foreach($properties as $property)
+                        <option value="{{ $property->id }}" {{ old('property_id') == $property->id ? 'selected' : '' }}>
+                            {{ $property->property_code }} - {{ $property->address }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('property_id')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+        @else
+            <div>
+                <label for="address" class="block text-sm font-medium text-gray-700">Property Address</label>
+                <input type="text" name="address" id="address" value="{{ old('address') }}" class="mt-1 block w-full border-gray-300 rounded-md" required>
+                @error('address')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label for="district" class="block text-sm font-medium text-gray-700">District</label>
+                <select name="district" id="district" required class="mt-1 block w-full border-gray-300 rounded-md">
+                    <option value="">Choose district...</option>
+                    @foreach($districts as $district)
+                        <option value="{{ $district }}" {{ old('district') == $district ? 'selected' : '' }}>{{ $district }}</option>
+                    @endforeach
+                </select>
+                @error('district')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label for="property_type" class="block text-sm font-medium text-gray-700">Property Type</label>
+                <select name="property_type" id="property_type" required class="mt-1 block w-full border-gray-300 rounded-md">
+                    <option value="">Choose type...</option>
+                    @foreach($propertyTypes as $type => $label)
+                        <option value="{{ $type }}" {{ old('property_type') == $type ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('property_type')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+        @endif
 
         <div>
             <label for="package_id" class="block text-sm font-medium text-gray-700">Inspection Package</label>
