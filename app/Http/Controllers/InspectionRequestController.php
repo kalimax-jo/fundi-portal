@@ -16,6 +16,7 @@ class InspectionRequestController extends Controller
      */
     public function create()
     {
+
         $packages = InspectionPackage::active()->get();
         $user = auth()->user();
 
@@ -45,6 +46,13 @@ class InspectionRequestController extends Controller
             'propertyTypes' => $propertyTypes,
             'districts' => $districts,
         ]);
+
+        $properties = Property::all();
+        $packages = InspectionPackage::active()->get();
+        $businessPartners = auth()->user()->businessPartners()->active()->get();
+
+        return view('inspection-requests.create', compact('properties', 'packages', 'businessPartners'));
+
     }
 
     /**
@@ -52,16 +60,22 @@ class InspectionRequestController extends Controller
      */
     public function store(Request $request)
     {
+
         $user = auth()->user();
         $isIndividual = $user->isIndividualClient();
 
         $rules = [
+
+        $validator = Validator::make($request->all(), [
+            'property_id' => 'required|exists:properties,id',
+
             'package_id' => 'required|exists:inspection_packages,id',
             'purpose' => 'required|in:rental,sale,purchase,loan_collateral,insurance,maintenance,other',
             'urgency' => 'required|in:normal,urgent,emergency',
             'preferred_date' => 'nullable|date|after:today',
             'preferred_time_slot' => 'required|in:morning,afternoon,evening,flexible',
             'special_instructions' => 'nullable|string|max:1000',
+
         ];
 
         if ($isIndividual) {
@@ -78,6 +92,9 @@ class InspectionRequestController extends Controller
 
         $validator = Validator::make($request->all(), $rules);
 
+        ]);
+
+
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
@@ -86,6 +103,7 @@ class InspectionRequestController extends Controller
             DB::beginTransaction();
 
             $package = InspectionPackage::findOrFail($request->package_id);
+
 
             $propertyId = $request->property_id;
 
@@ -107,6 +125,14 @@ class InspectionRequestController extends Controller
                 'requester_user_id' => $user->id,
                 'business_partner_id' => $isIndividual ? null : $request->business_partner_id,
                 'property_id' => $propertyId,
+
+            $inspectionRequest = InspectionRequest::create([
+                'request_number' => InspectionRequest::generateRequestNumber(),
+                'requester_type' => auth()->user()->isBusinessPartner() ? 'business_partner' : 'individual',
+                'requester_user_id' => auth()->id(),
+                'business_partner_id' => $request->business_partner_id,
+                'property_id' => $request->property_id,
+
                 'package_id' => $package->id,
                 'purpose' => $request->purpose,
                 'urgency' => $request->urgency,

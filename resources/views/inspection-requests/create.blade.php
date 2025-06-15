@@ -7,6 +7,7 @@
     <h2 class="text-xl font-semibold mb-4">Request Inspection</h2>
     <form method="POST" action="{{ route('inspection-requests.store') }}" class="space-y-6">
         @csrf
+
         @if(!$isIndividual)
             <div>
                 <label for="property_id" class="block text-sm font-medium text-gray-700">Property</label>
@@ -47,6 +48,19 @@
                 @error('property_type')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
         @endif
+
+        <div>
+            <label for="property_id" class="block text-sm font-medium text-gray-700">Property</label>
+            <select name="property_id" id="property_id" required class="mt-1 block w-full border-gray-300 rounded-md">
+                <option value="">Choose property...</option>
+                @foreach($properties as $property)
+                    <option value="{{ $property->id }}" {{ old('property_id') == $property->id ? 'selected' : '' }}>
+                        {{ $property->property_code }} - {{ $property->address }}
+                    </option>
+                @endforeach
+            </select>
+            @error('property_id')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
+        </div>
 
         <div>
             <label for="package_id" class="block text-sm font-medium text-gray-700">Inspection Package</label>
