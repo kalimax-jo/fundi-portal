@@ -113,4 +113,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         // Assignment statistics
         Route::get('/statistics', [App\Http\Controllers\Admin\AssignmentController::class, 'statistics'])->name('statistics');
     });
+
+
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
+    
+    // Existing property routes...
+    Route::resource('properties', PropertyController::class);
+    
+    // Add these new routes for property search
+    Route::get('properties/search', [PropertyController::class, 'search'])->name('properties.search');
+    Route::get('properties/{property}/details', [PropertyController::class, 'details'])->name('properties.details');
+    
+    // Existing inspection request routes...
+    Route::resource('inspection-requests', InspectionRequestController::class);
+    
+});
 });

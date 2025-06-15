@@ -408,4 +408,51 @@ class PropertyController extends Controller
 
         return $property->market_value / $property->total_area_sqm;
     }
+
+    /**
+ * Search properties for inspection request form
+ */
+public function search(Request $request)
+{
+    $query = $request->get('q', '');
+    
+    if (strlen($query) < 2) {
+        return response()->json(['properties' => []]);
+    }
+    
+    $properties = Property::search($query)
+        ->select([
+            'id', 'property_code', 'owner_name', 'owner_phone', 'owner_email',
+            'property_type', 'property_subtype', 'address', 'district', 'sector'
+        ])
+        ->limit(10)
+        ->get();
+    
+    return response()->json(['properties' => $properties]);
+}
+
+/**
+ * Get property details for auto-fill
+ */
+public function details(Property $property)
+{
+    return response()->json([
+        'id' => $property->id,
+        'property_code' => $property->property_code,
+        'owner_name' => $property->owner_name,
+        'owner_phone' => $property->owner_phone,
+        'owner_email' => $property->owner_email,
+        'property_type' => $property->property_type,
+        'property_subtype' => $property->property_subtype,
+        'address' => $property->address,
+        'district' => $property->district,
+        'sector' => $property->sector,
+        'cell' => $property->cell,
+        'built_year' => $property->built_year,
+        'total_area_sqm' => $property->total_area_sqm,
+        'floors_count' => $property->floors_count,
+        'bedrooms_count' => $property->bedrooms_count,
+        'bathrooms_count' => $property->bathrooms_count
+    ]);
+}
 }
