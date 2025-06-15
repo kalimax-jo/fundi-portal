@@ -160,7 +160,7 @@
                 <label for="district" class="block text-sm font-medium text-gray-700">District</label>
                 <select name="district" id="district" required class="mt-1 block w-full border-gray-300 rounded-md">
                     <option value="">Choose district...</option>
-                    @foreach($districts as $district)
+                    @foreach(($districts ?? []) as $district)
                         <option value="{{ $district }}" {{ old('district') == $district ? 'selected' : '' }}>{{ $district }}</option>
                     @endforeach
                 </select>
@@ -170,7 +170,7 @@
                 <label for="property_type" class="block text-sm font-medium text-gray-700">Property Type</label>
                 <select name="property_type" id="property_type" required class="mt-1 block w-full border-gray-300 rounded-md">
                     <option value="">Choose type...</option>
-                    @foreach($propertyTypes as $type => $label)
+                    @foreach(($propertyTypes ?? []) as $type => $label)
                         <option value="{{ $type }}" {{ old('property_type') == $type ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
