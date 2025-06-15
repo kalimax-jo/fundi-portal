@@ -50,6 +50,7 @@
         @endif
 
         <div>
+
             <label for="property_id" class="block text-sm font-medium text-gray-700">Property</label>
             <select name="property_id" id="property_id" required class="mt-1 block w-full border-gray-300 rounded-md">
                 <option value="">Choose property...</option>
@@ -63,6 +64,7 @@
         </div>
 
         <div>
+
             <label for="package_id" class="block text-sm font-medium text-gray-700">Inspection Package</label>
             <select name="package_id" id="package_id" required class="mt-1 block w-full border-gray-300 rounded-md">
                 <option value="">Choose package...</option>

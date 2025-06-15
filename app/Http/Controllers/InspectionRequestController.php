@@ -47,11 +47,13 @@ class InspectionRequestController extends Controller
             'districts' => $districts,
         ]);
 
+
         $properties = Property::all();
         $packages = InspectionPackage::active()->get();
         $businessPartners = auth()->user()->businessPartners()->active()->get();
 
         return view('inspection-requests.create', compact('properties', 'packages', 'businessPartners'));
+
 
     }
 
@@ -65,6 +67,7 @@ class InspectionRequestController extends Controller
         $isIndividual = $user->isIndividualClient();
 
         $rules = [
+
 
         $validator = Validator::make($request->all(), [
             'property_id' => 'required|exists:properties,id',
@@ -82,6 +85,7 @@ class InspectionRequestController extends Controller
             $rules = array_merge($rules, [
                 'address' => 'required|string|max:255',
                 'district' => 'required|string|max:100',
+
                 'property_type' => 'required|in:residential,commercial,industrial,mixed',
             ]);
         } else {
@@ -94,7 +98,6 @@ class InspectionRequestController extends Controller
 
         ]);
 
-
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
@@ -103,7 +106,6 @@ class InspectionRequestController extends Controller
             DB::beginTransaction();
 
             $package = InspectionPackage::findOrFail($request->package_id);
-
 
             $propertyId = $request->property_id;
 
@@ -126,12 +128,14 @@ class InspectionRequestController extends Controller
                 'business_partner_id' => $isIndividual ? null : $request->business_partner_id,
                 'property_id' => $propertyId,
 
+
             $inspectionRequest = InspectionRequest::create([
                 'request_number' => InspectionRequest::generateRequestNumber(),
                 'requester_type' => auth()->user()->isBusinessPartner() ? 'business_partner' : 'individual',
                 'requester_user_id' => auth()->id(),
                 'business_partner_id' => $request->business_partner_id,
                 'property_id' => $request->property_id,
+
 
                 'package_id' => $package->id,
                 'purpose' => $request->purpose,
