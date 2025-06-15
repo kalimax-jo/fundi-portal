@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InspectionRequestController as UserInspectionRequestController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -11,8 +13,12 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Basic dashboard (your existing one)
-Route::view('/dashboard', 'dashboard')->middleware('auth')->name('dashboard');
+// Authenticated user routes
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/inspection-requests/create', [UserInspectionRequestController::class, 'create'])->name('inspection-requests.create');
+    Route::post('/inspection-requests', [UserInspectionRequestController::class, 'store'])->name('inspection-requests.store');
+});
 
 // Admin Routes (Protected by admin middleware)
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
