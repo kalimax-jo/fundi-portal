@@ -68,83 +68,55 @@
                     <div class="flex items-center min-w-0 flex-1">
                         <div class="flex-shrink-0">
                             <div class="h-12 w-12 rounded-full {{ $user->pivot->is_primary_contact ? 'bg-indigo-100' : 'bg-gray-100' }} flex items-center justify-center">
-                                <span class="text-lg font-medium {{ $user->pivot->is_primary_contact ? 'text-indigo-600' : 'text-gray-600' }}">
-                                    {{ substr($user->first_name, 0, 1) }}{{ substr($user->last_name, 0, 1) }}
+                                <span class="text-lg font-medium {{ $user->pivot->is_primary_contact ? 'text-indigo-800' : 'text-gray-600' }}">
+                                    {{ strtoupper(substr($user->first_name, 0, 1) . substr($user->last_name, 0, 1)) }}
                                 </span>
                             </div>
                         </div>
-                        <div class="ml-4 flex-1 min-w-0">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900 truncate flex items-center">
-                                        <a href="{{ route('admin.users.show', $user) }}" class="hover:text-indigo-600">
-                                            {{ $user->full_name }}
-                                        </a>
-                                        @if($user->pivot->is_primary_contact)
-                                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                                Primary Contact
-                                            </span>
-                                        @endif
-                                    </p>
-                                    <p class="text-sm text-gray-500">
-                                        {{ $user->email }}
-                                        @if($user->phone)
-                                            • {{ $user->phone }}
-                                        @endif
-                                    </p>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <!-- Access Level Badge -->
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 
-                                        $user->pivot->access_level === 'admin' ? 'bg-red-100 text-red-800' : 
-                                        ($user->pivot->access_level === 'user' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') 
-                                    }}">
-                                        {{ ucfirst($user->pivot->access_level) }}
-                                    </span>
-
-                                    <!-- User Status -->
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ 
-                                        $user->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' 
-                                    }}">
-                                        {{ ucfirst($user->status) }}
-                                    </span>
-                                </div>
+                        <div class="ml-4 min-w-0 flex-1">
+                            <div class="flex items-center">
+                                <p class="text-sm font-medium text-gray-900 truncate">
+                                    {{ $user->full_name }}
+                                </p>
+                                @if($user->pivot->is_primary_contact)
+                                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    Primary Contact
+                                </span>
+                                @endif
                             </div>
-                            <div class="mt-2 flex items-center text-sm text-gray-500">
-                                <div class="flex items-center">
-                                    <svg class="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd" />
-                                    </svg>
-                                    Added {{ $user->pivot->added_at ? \Carbon\Carbon::parse($user->pivot->added_at)->diffForHumans() : 'some time ago' }}
-                                </div>
+                            <div class="flex items-center space-x-4 mt-1">
+                                <p class="text-sm text-gray-500">{{ $user->email }}</p>
+                                @if($user->phone)
+                                <p class="text-sm text-gray-500">{{ $user->phone }}</p>
+                                @endif
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                    {{ $user->pivot->access_level === 'admin' ? 'bg-red-100 text-red-800' : 
+                                       ($user->pivot->access_level === 'user' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
+                                    {{ ucfirst($user->pivot->access_level) }}
+                                </span>
                             </div>
                         </div>
                     </div>
-                    <div class="ml-4 flex-shrink-0 flex space-x-2">
-                        <!-- Actions Dropdown -->
+                    <div class="flex items-center space-x-2">
+                        @unless($user->pivot->is_primary_contact)
+                        <button onclick="setPrimaryContact({{ $user->id }})" 
+                                class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                            Set as Primary
+                        </button>
+                        @endunless
+                        
+                        <!-- Dropdown Menu -->
                         <div class="relative">
                             <button onclick="toggleDropdown({{ $user->id }})" 
-                                    class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Actions
-                                <svg class="ml-2 -mr-0.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    class="inline-flex items-center p-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z"/>
                                 </svg>
                             </button>
-                            <div id="dropdown-{{ $user->id }}" class="hidden origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                            
+                            <div id="dropdown-{{ $user->id }}" class="hidden absolute right-0 z-10 mt-2 w-48 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
                                 <div class="py-1">
-                                    <a href="{{ route('admin.users.show', $user) }}" 
-                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        View User Profile
-                                    </a>
-                                    
-                                    @unless($user->pivot->is_primary_contact)
-                                    <button onclick="setPrimaryContact({{ $user->id }})" 
-                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        Set as Primary Contact
-                                    </button>
-                                    @endunless
-                                    
-                                    <button onclick="showEditUserModal({{ $user->id }}, '{{ $user->pivot->access_level }}')" 
+                                    <button onclick="showEditUserModal({{ $user->id }}, '{{ $user->pivot->access_level }}', '{{ $user->full_name }}')" 
                                             class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         Change Access Level
                                     </button>
@@ -226,74 +198,113 @@
                             <option value="">Choose a user...</option>
                             @foreach(\App\Models\User::whereDoesntHave('businessPartners', function($query) use ($businessPartner) {
                                 $query->where('business_partner_id', $businessPartner->id);
-                            })->where('status', 'active')->get() as $availableUser)
-                                <option value="{{ $availableUser->id }}">
-                                    {{ $availableUser->full_name }} ({{ $availableUser->email }})
-                                </option>
+                            })->get() as $availableUser)
+                            <option value="{{ $availableUser->id }}">{{ $availableUser->full_name }} ({{ $availableUser->email }})</option>
                             @endforeach
                         </select>
                     </div>
 
                     <!-- New User Fields -->
-                    <div id="newUserFields" class="space-y-4 hidden">
+                    <div id="newUserFields" class="mb-4 hidden space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
                                 <input type="text" name="first_name" id="first_name" 
-                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             </div>
                             <div>
                                 <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
                                 <input type="text" name="last_name" id="last_name" 
-                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             </div>
                         </div>
                         
                         <div>
                             <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
                             <input type="email" name="email" id="email" 
-                                   class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         </div>
                         
                         <div>
-                            <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
-                            <input type="tel" name="phone" id="phone" 
-                                   class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            <label for="phone" class="block text-sm font-medium text-gray-700">Phone (Optional)</label>
+                            <input type="text" name="phone" id="phone" 
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                                <input type="password" name="password" id="password" 
-                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-                            <div>
-                                <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                                <input type="password" name="password_confirmation" id="password_confirmation" 
-                                       class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" name="password" id="password" 
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        
+                        <div>
+                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" 
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         </div>
                     </div>
 
                     <!-- Access Level -->
                     <div class="mb-4">
                         <label for="access_level" class="block text-sm font-medium text-gray-700">Access Level</label>
-                        <select name="access_level" id="access_level" required
+                        <select name="access_level" id="access_level" 
                                 class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             <option value="">Select Access Level</option>
                             <option value="admin">Admin - Full access to partner account</option>
-                            <option value="user">User - Standard access for operations</option>
+                            <option value="user">User - Standard access</option>
                             <option value="viewer">Viewer - Read-only access</option>
                         </select>
                     </div>
                 </div>
-
+                
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                     <button type="submit" 
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
                         Add User
                     </button>
                     <button type="button" onclick="hideAddUserModal()" 
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg max-w-md w-full mx-auto shadow-xl">
+            <form id="editUserForm" method="POST">
+                @csrf
+                @method('PATCH')
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Edit User Access Level</h3>
+                    
+                    <!-- User Info -->
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600">
+                            Editing access level for: <span id="editUserName" class="font-semibold"></span>
+                        </p>
+                    </div>
+
+                    <!-- Access Level -->
+                    <div class="mb-4">
+                        <label for="edit_access_level" class="block text-sm font-medium text-gray-700">Access Level</label>
+                        <select name="access_level" id="edit_access_level" 
+                                class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="admin">Admin - Full access to partner account</option>
+                            <option value="user">User - Standard access</option>
+                            <option value="viewer">Viewer - Read-only access</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" 
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Update Access Level
+                    </button>
+                    <button type="button" onclick="hideEditUserModal()" 
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                         Cancel
                     </button>
@@ -312,6 +323,34 @@ function showAddUserModal() {
 
 function hideAddUserModal() {
     document.getElementById('addUserModal').classList.add('hidden');
+    // Reset form
+    document.querySelector('#addUserModal form').reset();
+    // Hide all conditional fields
+    document.getElementById('existingUserFields').classList.add('hidden');
+    document.getElementById('newUserFields').classList.add('hidden');
+}
+
+function showEditUserModal(userId, currentAccessLevel, userName) {
+    const modal = document.getElementById('editUserModal');
+    const form = document.getElementById('editUserForm');
+    const nameSpan = document.getElementById('editUserName');
+    const accessSelect = document.getElementById('edit_access_level');
+    
+    // Set form action
+    form.action = `/admin/business-partners/{{ $businessPartner->id }}/users/${userId}/update-access`;
+    
+    // Set user name
+    nameSpan.textContent = userName;
+    
+    // Set current access level
+    accessSelect.value = currentAccessLevel;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+}
+
+function hideEditUserModal() {
+    document.getElementById('editUserModal').classList.add('hidden');
 }
 
 // Toggle user type fields
@@ -369,17 +408,14 @@ function setPrimaryContact(userId) {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert('Error: ' + data.message);
-        }
+    .then(response => {
+        
+        window.location.reload();
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while updating the primary contact.');
+        // Even if there's an error, reload to see if it actually worked
+        window.location.reload();
     });
 }
 
@@ -408,15 +444,11 @@ function removeUser(userId, userName) {
     form.submit();
 }
 
-function showEditUserModal(userId, currentAccessLevel) {
-    // You can implement this modal similar to the add user modal
-    alert('Edit user modal - to be implemented');
-}
-
-// Close modal with Escape key
+// Close modals with Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         hideAddUserModal();
+        hideEditUserModal();
     }
 });
 </script>

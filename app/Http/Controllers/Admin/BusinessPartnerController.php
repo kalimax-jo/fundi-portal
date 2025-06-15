@@ -7,10 +7,13 @@ use App\Models\BusinessPartner;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class BusinessPartnerController extends Controller
 {
@@ -19,61 +22,39 @@ class BusinessPartnerController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BusinessPartner::query()->with(['users' => function($query) {
-            $query->wherePivot('is_primary_contact', true);
-        }]);
+        $query = BusinessPartner::query();
 
         // Search functionality
-        if ($request->filled('search')) {
-            $searchTerm = $request->search;
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('email', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('contact_person', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('registration_number', 'like', '%' . $searchTerm . '%');
+        if ($request->has('search') && $request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%')
+                  ->orWhere('contact_person', 'like', '%' . $request->search . '%');
             });
         }
 
         // Filter by type
-        if ($request->filled('type')) {
+        if ($request->has('type') && $request->type) {
             $query->where('type', $request->type);
         }
 
-        // Filter by partnership status
-        if ($request->filled('status')) {
+        // Filter by status
+        if ($request->has('status') && $request->status) {
             $query->where('partnership_status', $request->status);
         }
 
-        // Filter by tier
-        if ($request->filled('tier')) {
-            $query->where('tier', $request->tier);
-        }
+        $partners = $query->with(['users'])
+            ->withCount(['inspectionRequests', 'users'])
+            ->paginate(20);
 
-        // Sorting
-        $sortField = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
-        
-        $allowedSortFields = ['name', 'type', 'partnership_status', 'tier', 'created_at', 'total_inspections'];
-        if (in_array($sortField, $allowedSortFields)) {
-            if ($sortField === 'total_inspections') {
-                $query->withCount('inspectionRequests as total_inspections')
-                      ->orderBy('total_inspections', $sortDirection);
-            } else {
-                $query->orderBy($sortField, $sortDirection);
-            }
-        }
-
-        $partners = $query->paginate(15)->withQueryString();
-
-        // Get statistics for the header
+        // Calculate stats
         $stats = [
-            'total' => BusinessPartner::count(),
-            'active' => BusinessPartner::where('partnership_status', 'active')->count(),
-            'inactive' => BusinessPartner::where('partnership_status', 'inactive')->count(),
-            'suspended' => BusinessPartner::where('partnership_status', 'suspended')->count(),
+            'total_partners' => BusinessPartner::count(),
+            'active_partners' => BusinessPartner::where('partnership_status', 'active')->count(),
+            'total_inspections' => BusinessPartner::withCount('inspectionRequests')->sum('inspection_requests_count'),
+            'total_users' => BusinessPartner::withCount('users')->sum('users_count'),
         ];
 
-        // Get partner types for filter
         $partnerTypes = [
             'bank' => 'Bank',
             'insurance' => 'Insurance Company',
@@ -198,12 +179,19 @@ class BusinessPartnerController extends Controller
             ]);
 
             // Associate user with business partner as primary contact
-            $partner->users()->attach($primaryContact->id, [
+            $pivotData = [
                 'access_level' => 'admin',
                 'is_primary_contact' => true,
-                'added_by' => auth()->id(),
-                'added_at' => now(),
-            ]);
+            ];
+
+            if (Schema::hasColumn('business_partner_users', 'added_by')) {
+                $pivotData['added_by'] = auth()->id();
+            }
+            if (Schema::hasColumn('business_partner_users', 'added_at')) {
+                $pivotData['added_at'] = now();
+            }
+
+            $partner->users()->attach($primaryContact->id, $pivotData);
 
             DB::commit();
 
@@ -225,41 +213,34 @@ class BusinessPartnerController extends Controller
     {
         $businessPartner->load([
             'users' => function ($query) {
-                $query->orderBy('business_partner_users.is_primary_contact', 'desc')
-                      ->orderBy('business_partner_users.added_at', 'asc');
+                $query->orderBy('business_partner_users.is_primary_contact', 'desc');
+                if (Schema::hasColumn('business_partner_users', 'added_at')) {
+                    $query->orderBy('business_partner_users.added_at', 'asc');
+                } else {
+                    $query->orderBy('business_partner_users.created_at', 'asc');
+                }
             },
             'inspectionRequests' => function ($query) {
                 $query->latest()->take(10);
-            },
-            'billings' => function ($query) {
-                $query->latest()->take(5);
             }
         ]);
 
         // Calculate statistics
         $stats = [
-            'total_inspections' => $businessPartner->getTotalInspections(),
-            'current_month_inspections' => $businessPartner->getCurrentMonthInspections(),
-            'total_amount_spent' => $businessPartner->getTotalAmountSpent(),
-            'pending_billing_amount' => $businessPartner->getPendingBillingAmount(),
-            'partnership_duration_months' => $businessPartner->getPartnershipDurationInMonths(),
-            'average_monthly_inspections' => $businessPartner->getPartnershipDurationInMonths() > 0 
-                ? round($businessPartner->getTotalInspections() / $businessPartner->getPartnershipDurationInMonths(), 1) 
+            'total_inspections' => $businessPartner->inspectionRequests->count(),
+            'current_month_inspections' => $businessPartner->inspectionRequests()
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->whereYear('created_at', Carbon::now()->year)
+                ->count(),
+            'total_users' => $businessPartner->users->count(),
+            'partnership_duration_months' => $businessPartner->partnership_start_date 
+                ? Carbon::parse($businessPartner->partnership_start_date)->diffInMonths(Carbon::now())
                 : 0,
         ];
 
-        // Get recent activity data for charts
-        $monthlyInspections = $businessPartner->inspectionRequests()
-            ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, COUNT(*) as count')
-            ->where('created_at', '>=', now()->subMonths(12))
-            ->groupByRaw('YEAR(created_at), MONTH(created_at)')
-            ->orderByRaw('YEAR(created_at), MONTH(created_at)')
-            ->get();
-
         return view('admin.business-partners.show', compact(
             'businessPartner', 
-            'stats', 
-            'monthlyInspections'
+            'stats'
         ));
     }
 
@@ -410,10 +391,12 @@ class BusinessPartnerController extends Controller
      */
     public function users(BusinessPartner $businessPartner)
     {
+        // Force reload the users relationship
+        $businessPartner->unsetRelation('users');
         $businessPartner->load([
             'users' => function ($query) {
                 $query->orderBy('business_partner_users.is_primary_contact', 'desc')
-                      ->orderBy('business_partner_users.added_at', 'asc');
+                      ->orderBy('business_partner_users.id', 'asc');
             }
         ]);
 
@@ -421,149 +404,224 @@ class BusinessPartnerController extends Controller
     }
 
     /**
-     * Add user to business partner
+     * Add user to business partner - FIXED VERSION
      */
-    public function addUser(Request $request, BusinessPartner $businessPartner)
-    {
-        $validator = Validator::make($request->all(), [
-            'user_type' => 'required|in:existing,new',
-            'user_id' => 'required_if:user_type,existing|exists:users,id',
-            'access_level' => 'required|in:admin,user,viewer',
+    /**
+ * Add user to business partner - FIXED VALIDATION
+ */
+public function addUser(Request $request, BusinessPartner $businessPartner)
+{
+    Log::info('Starting addUser process', [
+        'business_partner_id' => $businessPartner->id,
+        'user_type' => $request->user_type,
+        'request_data' => $request->except(['password', 'password_confirmation'])
+    ]);
+
+    // Fixed validation rules
+    $rules = [
+        'user_type' => 'required|in:existing,new',
+        'access_level' => 'required|in:admin,user,viewer',
+    ];
+
+    // Add conditional validation based on user type
+    if ($request->user_type === 'existing') {
+        $rules['user_id'] = 'required|exists:users,id';
+    } else {
+        // New user validation
+        $rules['first_name'] = 'required|string|max:100';
+        $rules['last_name'] = 'required|string|max:100';
+        $rules['email'] = 'required|email|max:255|unique:users,email';
+        $rules['phone'] = 'nullable|string|max:20|unique:users,phone';
+        $rules['password'] = 'required|string|min:8|confirmed';
+    }
+
+    $validator = Validator::make($request->all(), $rules);
+
+    if ($validator->fails()) {
+        Log::error('Validation failed', ['errors' => $validator->errors()]);
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+
+    // Rest of the method stays the same...
+    try {
+        DB::beginTransaction();
+
+        if ($request->user_type === 'new') {
+            // Create new user
+            $businessPartnerRole = Role::where('name', 'business_partner')->first();
             
-            // New user fields
-            'first_name' => 'required_if:user_type,new|string|max:100',
-            'last_name' => 'required_if:user_type,new|string|max:100',
-            'email' => 'required_if:user_type,new|email|max:255|unique:users,email',
-            'phone' => 'nullable|string|max:20|unique:users,phone',
-            'password' => 'required_if:user_type,new|string|min:8|confirmed',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        try {
-            DB::beginTransaction();
-
-            if ($request->user_type === 'new') {
-                // Create new user
-                $businessPartnerRole = Role::where('name', 'business_partner')->first();
-                
-                $user = User::create([
-                    'first_name' => $request->first_name,
-                    'last_name' => $request->last_name,
-                    'email' => $request->email,
-                    'phone' => $request->phone,
-                    'password' => Hash::make($request->password),
-                    'status' => 'active',
+            if (!$businessPartnerRole) {
+                // Create the role if it doesn't exist
+                $businessPartnerRole = Role::create([
+                    'name' => 'business_partner',
+                    'display_name' => 'Business Partner',
+                    'description' => 'Business partner user role',
+                    'permissions' => [
+                        'create_inspection_requests',
+                        'view_own_inspections',
+                        'view_inspection_reports',
+                        'manage_partner_users',
+                        'view_billing',
+                        'download_reports'
+                    ]
                 ]);
-
-                // Assign business partner role
-                $user->roles()->attach($businessPartnerRole->id, [
-                    'assigned_at' => now(),
-                    'assigned_by' => auth()->id(),
-                ]);
-            } else {
-                // Use existing user
-                $user = User::findOrFail($request->user_id);
-                
-                // Check if user is already associated with this partner
-                if ($businessPartner->users->contains($user->id)) {
-                    return redirect()->back()
-                        ->with('error', 'User is already associated with this business partner.');
-                }
             }
-
-            // Associate user with business partner
-            $businessPartner->users()->attach($user->id, [
-                'access_level' => $request->access_level,
-                'is_primary_contact' => false,
-                'added_by' => auth()->id(),
-                'added_at' => now(),
+            
+            $user = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+                'status' => 'active',
             ]);
 
-            DB::commit();
+            Log::info('User created', ['user_id' => $user->id, 'email' => $user->email]);
 
-            return redirect()->back()
-                ->with('success', 'User added to business partner successfully.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Failed to add user: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
-
-    /**
-     * Remove user from business partner
-     */
-    public function removeUser(BusinessPartner $businessPartner, User $user)
-    {
-        try {
-            // Check if this is the primary contact
-            $pivot = $businessPartner->users()->where('user_id', $user->id)->first();
-            if ($pivot && $pivot->pivot->is_primary_contact) {
+            // Assign business partner role
+            $user->roles()->attach($businessPartnerRole->id, [
+                'assigned_at' => now(),
+                'assigned_by' => auth()->id(),
+            ]);
+        } else {
+            // Use existing user
+            $user = User::findOrFail($request->user_id);
+            
+            // Check if user is already associated with this partner
+            if ($businessPartner->users->contains($user->id)) {
+                Log::warning('User already associated', ['user_id' => $user->id, 'bp_id' => $businessPartner->id]);
                 return redirect()->back()
-                    ->with('error', 'Cannot remove primary contact. Please set another user as primary contact first.');
+                    ->with('error', 'User is already associated with this business partner.');
             }
-
-            $businessPartner->users()->detach($user->id);
-
-            return redirect()->back()
-                ->with('success', 'User removed from business partner successfully.');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Failed to remove user: ' . $e->getMessage());
         }
+
+        // Prepare basic pivot data
+        $pivotData = [
+            'access_level' => $request->access_level,
+            'is_primary_contact' => false,
+        ];
+
+        // Check if optional columns exist before adding them
+        if (Schema::hasColumn('business_partner_users', 'added_by')) {
+            $pivotData['added_by'] = auth()->id();
+        }
+        if (Schema::hasColumn('business_partner_users', 'added_at')) {
+            $pivotData['added_at'] = now();
+        }
+
+        Log::info('Attaching user to business partner', [
+            'user_id' => $user->id,
+            'business_partner_id' => $businessPartner->id,
+            'pivot_data' => $pivotData
+        ]);
+
+        // Associate user with business partner
+        $businessPartner->users()->attach($user->id, $pivotData);
+
+        // Verify attachment
+        $attached = DB::table('business_partner_users')
+            ->where('business_partner_id', $businessPartner->id)
+            ->where('user_id', $user->id)
+            ->exists();
+            
+        Log::info('User attachment result', [
+            'attached' => $attached,
+            'user_id' => $user->id,
+            'bp_id' => $businessPartner->id
+        ]);
+
+        if (!$attached) {
+            throw new \Exception('Failed to attach user to business partner');
+        }
+
+        DB::commit();
+
+        Log::info('User successfully added to business partner');
+
+        return redirect()->back()
+            ->with('success', 'User added to business partner successfully.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Failed to add user', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return redirect()->back()
+            ->with('error', 'Failed to add user: ' . $e->getMessage())
+            ->withInput();
     }
-
+}
     /**
-     * Set user as primary contact
-     */
-    public function setPrimaryContact(Request $request, BusinessPartner $businessPartner, User $user)
-    {
-        try {
-            // Check if user is associated with this partner
-            if (!$businessPartner->users->contains($user->id)) {
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'User is not associated with this business partner.'
-                    ], 404);
-                }
-                return redirect()->back()
-                    ->with('error', 'User is not associated with this business partner.');
-            }
-
-            $businessPartner->setPrimaryContact($user);
-
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Primary contact updated successfully.'
-                ]);
-            }
-
-            return redirect()->back()
-                ->with('success', 'Primary contact updated successfully.');
-
-        } catch (\Exception $e) {
+  * Set user as primary contact
+ */
+public function setPrimaryContact(Request $request, BusinessPartner $businessPartner, User $user)
+{
+    try {
+        // Check if user is associated with this partner
+        $userExists = $businessPartner->users()->where('user_id', $user->id)->exists();
+        
+        if (!$userExists) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to update primary contact: ' . $e->getMessage()
-                ], 500);
+                    'message' => 'User is not associated with this business partner.'
+                ], 404);
             }
-            
             return redirect()->back()
-                ->with('error', 'Failed to update primary contact: ' . $e->getMessage());
+                ->with('error', 'User is not associated with this business partner.');
         }
-    }
 
+        // Simple direct database update - no model method
+        DB::beginTransaction();
+
+        // Remove primary contact status from all users for this business partner
+        DB::table('business_partner_users')
+            ->where('business_partner_id', $businessPartner->id)
+            ->update(['is_primary_contact' => 0]);
+
+        // Set new primary contact
+        DB::table('business_partner_users')
+            ->where('business_partner_id', $businessPartner->id)
+            ->where('user_id', $user->id)
+            ->update(['is_primary_contact' => 1]);
+
+        DB::commit();
+
+        // Always return JSON response for AJAX requests
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Primary contact updated successfully.'
+            ]);
+        }
+
+        return redirect()->back()
+            ->with('success', 'Primary contact updated successfully.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        \Log::error('Failed to set primary contact', [
+            'error' => $e->getMessage(),
+            'user_id' => $user->id,
+            'business_partner_id' => $businessPartner->id
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating the primary contact.'
+            ], 500);
+        }
+        
+        return redirect()->back()
+            ->with('error', 'An error occurred while updating the primary contact.');
+    }
+}
     /**
      * Update user access level
      */
