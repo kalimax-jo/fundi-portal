@@ -18,6 +18,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/inspection-requests/create', [UserInspectionRequestController::class, 'create'])->name('inspection-requests.create');
     Route::post('/inspection-requests', [UserInspectionRequestController::class, 'store'])->name('inspection-requests.store');
+    
+    // Individual client specific routes
+    Route::get('/my-requests', [UserInspectionRequestController::class, 'myRequests'])->name('my-requests');
+    Route::get('/my-properties', [UserInspectionRequestController::class, 'myProperties'])->name('my-properties');
+    Route::get('/profile', [UserInspectionRequestController::class, 'profile'])->name('profile');
+    Route::put('/profile', [UserInspectionRequestController::class, 'updateProfile'])->name('profile.update');
 });
 
 // Admin Routes (Protected by admin middleware)
@@ -68,6 +74,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     
     // Payment Management
     Route::get('payments', [App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/analytics', [App\Http\Controllers\Admin\PaymentController::class, 'analytics'])->name('payments.analytics');
+    Route::get('payments/export', [App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('payments.export');
     Route::get('payments/{payment}', [App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('payments.show');
     Route::post('payments/{payment}/refund', [App\Http\Controllers\Admin\PaymentController::class, 'refund'])->name('payments.refund');
     Route::post('payments/{payment}/mark-completed', [App\Http\Controllers\Admin\PaymentController::class, 'markCompleted'])->name('payments.mark-completed');
@@ -75,8 +83,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Package & Service Management
     Route::resource('packages', App\Http\Controllers\Admin\PackageController::class);
     Route::post('packages/{package}/toggle-status', [App\Http\Controllers\Admin\PackageController::class, 'toggleStatus'])->name('packages.toggle-status');
+    Route::get('packages/analytics', [App\Http\Controllers\Admin\PackageController::class, 'analytics'])->name('packages.analytics');
+    Route::post('packages/{package}/services', [App\Http\Controllers\Admin\PackageController::class, 'addService'])->name('packages.add-service');
+    Route::delete('packages/{package}/services/{service}', [App\Http\Controllers\Admin\PackageController::class, 'removeService'])->name('packages.remove-service');
+    Route::patch('packages/{package}/services/{service}', [App\Http\Controllers\Admin\PackageController::class, 'updateService'])->name('packages.update-service');
+    
     Route::resource('services', App\Http\Controllers\Admin\ServiceController::class);
     Route::post('services/{service}/toggle-status', [App\Http\Controllers\Admin\ServiceController::class, 'toggleStatus'])->name('services.toggle-status');
+    Route::get('services/analytics', [App\Http\Controllers\Admin\ServiceController::class, 'analytics'])->name('services.analytics');
+    Route::get('services/category/{category}', [App\Http\Controllers\Admin\ServiceController::class, 'byCategory'])->name('services.by-category');
+    Route::get('services/equipment/{equipment}', [App\Http\Controllers\Admin\ServiceController::class, 'byEquipment'])->name('services.by-equipment');
+    Route::post('services/bulk-update', [App\Http\Controllers\Admin\ServiceController::class, 'bulkUpdate'])->name('services.bulk-update');
     
     // Reports & Analytics
     Route::get('analytics/overview', [App\Http\Controllers\Admin\AnalyticsController::class, 'overview'])->name('analytics.overview');
@@ -84,17 +101,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('analytics/inspectors', [App\Http\Controllers\Admin\AnalyticsController::class, 'inspectors'])->name('analytics.inspectors');
     
     Route::get('reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/inspection-requests', [App\Http\Controllers\Admin\ReportController::class, 'inspectionRequests'])->name('reports.inspection-requests');
     Route::post('reports/generate', [App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
     Route::get('reports/export/{type}', [App\Http\Controllers\Admin\ReportController::class, 'export'])->name('reports.export');
     
-    // System Settings
-    Route::get('settings', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
-    Route::post('settings', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
-    
-    // Profile Management
-    Route::get('profile', [App\Http\Controllers\Admin\ProfileController::class, 'show'])->name('profile');
-    Route::put('profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
-
     // Assignment Management
     Route::prefix('assignments')->name('assignments.')->group(function () {
         // Assignment workflow interface
@@ -113,19 +123,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         // Assignment statistics
         Route::get('/statistics', [App\Http\Controllers\Admin\AssignmentController::class, 'statistics'])->name('statistics');
     });
-
-
-    Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
-    
-    // Existing property routes...
-    Route::resource('properties', PropertyController::class);
-    
-    // Add these new routes for property search
-    Route::get('properties/search', [PropertyController::class, 'search'])->name('properties.search');
-    Route::get('properties/{property}/details', [PropertyController::class, 'details'])->name('properties.details');
-    
-    // Existing inspection request routes...
-    Route::resource('inspection-requests', InspectionRequestController::class);
-    
 });
+
+// Head Technician Portal Routes
+Route::middleware(['auth', 'role:head_technician'])->prefix('head-tech')->name('headtech.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\HeadTech\DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('inspectors', \App\Http\Controllers\HeadTech\InspectorController::class);
+    Route::resource('inspection-requests', \App\Http\Controllers\HeadTech\InspectionRequestController::class);
+    Route::get('inspection-requests/assign', [\App\Http\Controllers\HeadTech\InspectionRequestController::class, 'assign'])->name('inspection-requests.assign-page');
+    Route::post('inspection-requests/{id}/assign', [\App\Http\Controllers\HeadTech\InspectionRequestController::class, 'assignInspector'])->name('inspection-requests.assign');
+});
+
+// Test route for role middleware
+Route::middleware(['role:head_technician'])->get('/test-role', function () {
+    return 'Role middleware works!';
 });

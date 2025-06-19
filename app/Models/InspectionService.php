@@ -40,18 +40,21 @@ class InspectionService extends Model
      */
     public function packages(): BelongsToMany
     {
-        return $this->belongsToMany(InspectionPackage::class, 'package_services')
+        return $this->belongsToMany(InspectionPackage::class, 'package_services', 'service_id', 'package_id')
             ->withPivot('is_mandatory', 'sort_order')
             ->withTimestamps();
     }
 
     /**
      * Get inspection findings for this service
+     * TODO: Uncomment when InspectionFinding model is created
      */
+    /*
     public function inspectionFindings(): HasMany
     {
         return $this->hasMany(InspectionFinding::class, 'service_id');
     }
+    */
 
     // =============================================
     // SCOPES
@@ -247,14 +250,10 @@ class InspectionService extends Model
      */
     public function getUsageStatistics(): array
     {
-        $totalFindings = $this->inspectionFindings()->count();
-        $criticalFindings = $this->inspectionFindings()
-            ->where('condition_rating', 'critical')
-            ->count();
-        $thisMonthFindings = $this->inspectionFindings()
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->count();
+        // TODO: Update when InspectionFinding model is created
+        $totalFindings = 0; // $this->inspectionFindings()->count();
+        $criticalFindings = 0; // $this->inspectionFindings()->where('condition_rating', 'critical')->count();
+        $thisMonthFindings = 0; // $this->inspectionFindings()->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
 
         return [
             'total_inspections' => $totalFindings,

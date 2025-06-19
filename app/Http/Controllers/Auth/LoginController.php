@@ -31,11 +31,14 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            // Redirect to admin dashboard if user is admin
-            if ($request->user()->isAdmin()) {
+            $user = $request->user();
+            if ($user->isHeadTechnician()) {
+                return redirect()->route('headtech.dashboard');
+            }
+            if ($user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
             }
-
+            // Add more role checks as needed
             return redirect()->intended(route('dashboard'));
         }
 

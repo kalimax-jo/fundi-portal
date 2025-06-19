@@ -111,14 +111,6 @@ class InspectionRequest extends Model
     }
 
     /**
-     * Get the actual inspection record
-     */
-    public function inspection(): HasOne
-    {
-        return $this->hasOne(Inspection::class);
-    }
-
-    /**
      * Get status history
      */
     public function statusHistory(): HasMany
@@ -552,10 +544,10 @@ class InspectionRequest extends Model
     /**
      * Record status change in history
      */
-    private function recordStatusChange(string $oldStatus, string $newStatus, int $changedBy, string $reason = null): void
+    private function recordStatusChange(?string $oldStatus, string $newStatus, int $changedBy, string $reason = null): void
     {
         $this->statusHistory()->create([
-            'old_status' => $oldStatus,
+            'old_status' => $oldStatus ?? 'new',
             'new_status' => $newStatus,
             'changed_by' => $changedBy,
             'change_reason' => $reason
@@ -612,7 +604,7 @@ class InspectionRequest extends Model
 
         static::created(function ($request) {
             // Create initial status history
-            $request->recordStatusChange(null, 'pending', $request->requester_user_id, 'Request created');
+            $request->recordStatusChange('new', 'pending', $request->requester_user_id, 'Request created');
         });
     }
 }

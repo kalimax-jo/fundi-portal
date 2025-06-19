@@ -46,7 +46,7 @@
                 <div class="ml-5 w-0 flex-1">
                     <dl>
                         <dt class="text-sm font-medium text-gray-500 truncate">Total Partners</dt>
-                        <dd class="text-lg font-medium text-gray-900">{{ number_format($stats['total']) }}</dd>
+                        <dd class="text-lg font-medium text-gray-900">{{ number_format($stats['total_partners']) }}</dd>
                     </dl>
                 </div>
             </div>

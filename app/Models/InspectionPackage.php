@@ -44,7 +44,7 @@ class InspectionPackage extends Model
      */
     public function services(): BelongsToMany
     {
-        return $this->belongsToMany(InspectionService::class, 'package_services')
+        return $this->belongsToMany(InspectionService::class, 'package_services', 'package_id', 'service_id')
             ->withPivot('is_mandatory', 'sort_order')
             ->withTimestamps()
             ->orderBy('package_services.sort_order');
@@ -261,7 +261,7 @@ class InspectionPackage extends Model
      */
     public function addService(InspectionService $service, bool $isMandatory = true, int $sortOrder = 0): void
     {
-        if (!$this->services()->where('inspection_service_id', $service->id)->exists()) {
+        if (!$this->services()->where('service_id', $service->id)->exists()) {
             $this->services()->attach($service->id, [
                 'is_mandatory' => $isMandatory,
                 'sort_order' => $sortOrder ?: ($this->services()->count() + 1)
@@ -282,18 +282,18 @@ class InspectionPackage extends Model
      */
     public function updateService(InspectionService $service, bool $isMandatory = null, int $sortOrder = null): void
     {
-        $updateData = [];
+        $pivotData = [];
         
-        if (!is_null($isMandatory)) {
-            $updateData['is_mandatory'] = $isMandatory;
+        if ($isMandatory !== null) {
+            $pivotData['is_mandatory'] = $isMandatory;
         }
         
-        if (!is_null($sortOrder)) {
-            $updateData['sort_order'] = $sortOrder;
+        if ($sortOrder !== null) {
+            $pivotData['sort_order'] = $sortOrder;
         }
-
-        if (!empty($updateData)) {
-            $this->services()->updateExistingPivot($service->id, $updateData);
+        
+        if (!empty($pivotData)) {
+            $this->services()->updateExistingPivot($service->id, $pivotData);
         }
     }
 
@@ -444,5 +444,26 @@ class InspectionPackage extends Model
         }
 
         return $comparison;
+    }
+
+    /**
+     * Get target client types
+     */
+    public static function getTargetClientTypes(): array
+    {
+        return [
+            'individual' => 'Individual Clients',
+            'business' => 'Business Partners',
+            'both' => 'All Client Types'
+        ];
+    }
+
+    /**
+     * Get target client type display name
+     */
+    public function getTargetClientTypeDisplayName(): string
+    {
+        $clientTypes = self::getTargetClientTypes();
+        return $clientTypes[$this->target_client_type] ?? ucfirst($this->target_client_type);
     }
 }

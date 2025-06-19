@@ -226,66 +226,15 @@
         @if($requests->count() > 0)
         <ul role="list" class="divide-y divide-gray-200">
             @foreach($requests as $request)
-            <li>
-                <a href="{{ route('admin.inspection-requests.show', $request) }}" class="block hover:bg-gray-50">
-                    <div class="px-4 py-4 sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center min-w-0 flex-1">
-                                <div class="flex-shrink-0">
-                                    <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                                        <span class="text-sm font-medium text-gray-700">
-                                            {{ substr($request->request_number, -4) }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="ml-4 min-w-0 flex-1">
-                                    <div class="flex items-center">
-                                        <p class="text-sm font-medium text-indigo-600 truncate">
-                                            {{ $request->request_number }}
-                                        </p>
-                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            {{ $request->urgency === 'emergency' ? 'bg-red-100 text-red-800' : 
-                                               ($request->urgency === 'urgent' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800') }}">
-                                            {{ ucfirst($request->urgency) }}
-                                        </span>
-                                    </div>
-                                    <div class="mt-1">
-                                        <p class="text-sm text-gray-900">
-                                            {{ $request->requester->full_name }} 
-                                            @if($request->businessPartner)
-                                            <span class="text-gray-500">via {{ $request->businessPartner->name }}</span>
-                                            @endif
-                                        </p>
-                                        <p class="text-sm text-gray-500">
-                                            {{ $request->property->address }} • {{ $request->package->display_name }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex flex-col items-end">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {{ $request->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                       ($request->status === 'assigned' ? 'bg-blue-100 text-blue-800' : 
-                                       ($request->status === 'in_progress' ? 'bg-indigo-100 text-indigo-800' : 
-                                       ($request->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'))) }}">
-                                    {{ ucfirst(str_replace('_', ' ', $request->status)) }}
-                                </span>
-                                <p class="mt-1 text-sm text-gray-500">
-                                    {{ $request->created_at->format('M j, Y') }}
-                                </p>
-                                @if($request->assignedInspector)
-                                <p class="text-xs text-gray-400">
-                                    {{ $request->assignedInspector->user->full_name }}
-                                </p>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </li>
+                @include('inspection-requests.inspection-request-card', [
+                    'request' => $request,
+                    'showActions' => true,
+                    'showLink' => true,
+                    'linkRoute' => 'admin.inspection-requests.show',
+                    'role' => 'admin',
+                ])
             @endforeach
         </ul>
-
         <!-- Pagination -->
         <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
             {{ $requests->links() }}

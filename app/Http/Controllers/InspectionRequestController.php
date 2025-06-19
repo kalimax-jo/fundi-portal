@@ -8,6 +8,7 @@ use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class InspectionRequestController extends Controller
 {
@@ -103,12 +104,22 @@ class InspectionRequestController extends Controller
             'applicant_phone' => 'nullable|string|max:20',
         ];
 
-        // Add conditional rules
+        // Add conditional rules for individual clients
         if ($isIndividual) {
             $rules = array_merge($rules, [
                 'address' => 'required|string|max:255',
                 'district' => 'required|string|max:100',
+                'sector' => 'nullable|string|max:100',
+                'cell' => 'nullable|string|max:100',
                 'property_type' => 'required|in:residential,commercial,industrial,mixed',
+                'property_size' => 'nullable|numeric|min:0',
+                'bedrooms' => 'nullable|integer|min:0',
+                'bathrooms' => 'nullable|integer|min:0',
+                'construction_year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
+                'property_condition' => 'nullable|in:excellent,good,fair,poor,under_construction',
+                'property_description' => 'nullable|string|max:1000',
+                'latitude' => 'nullable|numeric|between:-90,90',
+                'longitude' => 'nullable|numeric|between:-180,180',
             ]);
         } else {
             $rules = array_merge($rules, [
@@ -137,7 +148,16 @@ class InspectionRequestController extends Controller
                     'owner_email' => $user->email,
                     'address' => $request->address,
                     'district' => $request->district,
+                    'sector' => $request->sector,
+                    'cell' => $request->cell,
                     'property_type' => $request->property_type,
+                    'total_area_sqm' => $request->property_size,
+                    'bedrooms_count' => $request->bedrooms,
+                    'bathrooms_count' => $request->bathrooms,
+                    'built_year' => $request->construction_year,
+                    'additional_notes' => $request->property_description,
+                    'latitude' => $request->latitude,
+                    'longitude' => $request->longitude,
                 ]);
                 $propertyId = $property->id;
             }
@@ -196,23 +216,9 @@ class InspectionRequestController extends Controller
      */
     private function generateRequestNumber()
     {
-        $prefix = 'IR';
-        $year = date('Y');
-        $month = date('m');
-        
-        // Get the last request number for this month
-        $lastRequest = InspectionRequest::where('request_number', 'like', "{$prefix}-{$year}{$month}-%")
-            ->orderBy('request_number', 'desc')
-            ->first();
-        
-        if ($lastRequest) {
-            $lastNumber = (int) substr($lastRequest->request_number, -4);
-            $sequence = $lastNumber + 1;
-        } else {
-            $sequence = 1;
-        }
-        
-        return sprintf('%s-%s%s-%04d', $prefix, $year, $month, $sequence);
+        $date = Carbon::now()->format('Ymd');
+        $sequence = InspectionRequest::whereDate('created_at', Carbon::today())->count() + 1;
+        return 'REQ' . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -235,5 +241,68 @@ class InspectionRequestController extends Controller
         }
         
         return sprintf('%s%s-%04d', $prefix, $year, $sequence);
+    }
+
+    /**
+     * Show user's inspection requests
+     */
+    public function myRequests()
+    {
+        $user = auth()->user();
+        $requests = $user->inspectionRequests()
+            ->with(['package', 'assignedInspector.user', 'property'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('inspection-requests.my-requests', compact('requests'));
+    }
+
+    /**
+     * Show user's properties
+     */
+    public function myProperties()
+    {
+        $user = auth()->user();
+        $properties = Property::where('owner_email', $user->email)
+            ->orWhere('owner_phone', $user->phone)
+            ->with(['inspectionRequests' => function($query) use ($user) {
+                $query->where('requester_user_id', $user->id);
+            }])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('properties.my-properties', compact('properties'));
+    }
+
+    /**
+     * Show user profile
+     */
+    public function profile()
+    {
+        $user = auth()->user();
+        return view('profile.index', compact('user'));
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+        
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id,
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $user->update($request->only(['first_name', 'last_name', 'phone', 'email']));
+
+        return redirect()->route('profile')->with('success', 'Profile updated successfully.');
     }
 }

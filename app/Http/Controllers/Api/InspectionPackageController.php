@@ -368,7 +368,7 @@ class InspectionPackageController extends Controller
             $service = InspectionService::findOrFail($request->service_id);
 
             // Check if service is already in package
-            if ($package->services()->where('inspection_service_id', $service->id)->exists()) {
+            if ($package->services()->where('service_id', $service->id)->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Service is already included in this package'
@@ -433,7 +433,7 @@ class InspectionPackageController extends Controller
             $service = InspectionService::findOrFail($serviceId);
 
             // Check if service is in package
-            if (!$package->services()->where('inspection_service_id', $service->id)->exists()) {
+            if (!$package->services()->where('service_id', $service->id)->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Service is not included in this package'

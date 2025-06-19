@@ -115,12 +115,19 @@ class AdminDashboardController extends Controller
             ],
             
             // Package & Service Statistics
-            'packages_services' => [
-                'total_packages' => $this->safeCount(InspectionPackage::class),
-                'active_packages' => $this->safeCount(InspectionPackage::class, ['is_active' => true]),
-                'total_services' => $this->safeCount(InspectionService::class),
-                'active_services' => $this->safeCount(InspectionService::class, ['is_active' => true]),
-                'most_popular_package' => null, // We'll implement this later
+            'packages' => [
+                'total' => $this->safeCount(InspectionPackage::class),
+                'active' => $this->safeCount(InspectionPackage::class, ['is_active' => true]),
+                'inactive' => $this->safeCount(InspectionPackage::class, ['is_active' => false]),
+                'fixed_price' => $this->safeCount(InspectionPackage::class, ['is_custom_quote' => false]),
+                'custom_quote' => $this->safeCount(InspectionPackage::class, ['is_custom_quote' => true]),
+            ],
+            
+            'services' => [
+                'total' => $this->safeCount(InspectionService::class),
+                'active' => $this->safeCount(InspectionService::class, ['is_active' => true]),
+                'inactive' => $this->safeCount(InspectionService::class, ['is_active' => false]),
+                'by_category' => $this->safeGroupCount(InspectionService::class, 'category'),
             ],
         ];
     }

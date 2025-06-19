@@ -4,6 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PropertyController;
+use App\Http\Controllers\Api\InspectionPackageController;
+use App\Http\Controllers\Api\InspectorController;
+use App\Http\Controllers\Api\InspectionRequestController;
 
 /*
 |--------------------------------------------------------------------------

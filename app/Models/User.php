@@ -269,4 +269,17 @@ class User extends Authenticatable
     {
         $this->update(['status' => 'suspended']);
     }
+
+    /**
+     * Check if user has a specific permission (across all roles)
+     */
+    public function hasPermission(string $permission): bool
+    {
+        foreach ($this->roles as $role) {
+            if ($role->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

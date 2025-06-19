@@ -11,10 +11,8 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Scripts -->
-    @if (file_exists(public_path('build/manifest.json')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+    <!-- Tailwind CSS CDN (for consistent styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     @stack('styles')
 </head>

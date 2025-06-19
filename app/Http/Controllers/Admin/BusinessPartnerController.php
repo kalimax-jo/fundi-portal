@@ -50,9 +50,11 @@ class BusinessPartnerController extends Controller
         // Calculate stats
         $stats = [
             'total_partners' => BusinessPartner::count(),
-            'active_partners' => BusinessPartner::where('partnership_status', 'active')->count(),
-            'total_inspections' => BusinessPartner::withCount('inspectionRequests')->sum('inspection_requests_count'),
-            'total_users' => BusinessPartner::withCount('users')->sum('users_count'),
+            'active' => BusinessPartner::where('partnership_status', 'active')->count(),
+            'inactive' => BusinessPartner::where('partnership_status', 'inactive')->count(),
+            'suspended' => BusinessPartner::where('partnership_status', 'suspended')->count(),
+            'total_inspections' => \App\Models\InspectionRequest::whereNotNull('business_partner_id')->count(),
+            'total_users' => DB::table('business_partner_users')->distinct('user_id')->count('user_id'),
         ];
 
         $partnerTypes = [
