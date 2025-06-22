@@ -3,17 +3,104 @@
 @section('title', 'Head Technician Dashboard')
 
 @section('content')
-<div class="py-8">
-    <h1 class="text-2xl font-bold mb-4">Welcome, Head Technician!</h1>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded shadow">
-            <h2 class="text-lg font-semibold">Inspectors</h2>
-            <a href="{{ route('headtech.inspectors.index') }}" class="text-indigo-600 hover:underline">Manage Inspectors</a>
+    <div class="py-8">
+    <h1 class="text-3xl font-bold mb-6">Head Technician Dashboard</h1>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-indigo-100 rounded shadow p-4 flex items-center">
+            <div class="flex-shrink-0"><span class="inline-block w-8 h-8 bg-indigo-400 rounded-full flex items-center justify-center text-white font-bold">{{ $totalInspectors }}</span></div>
+            <div class="ml-4">
+                <div class="text-xs text-gray-500">Total</div>
+                <div class="text-lg font-bold text-indigo-800">Inspectors</div>
+            </div>
         </div>
-        <div class="bg-white p-6 rounded shadow">
-            <h2 class="text-lg font-semibold">Inspection Requests</h2>
-            <a href="{{ route('headtech.inspection-requests.index') }}" class="text-indigo-600 hover:underline">Manage Requests</a>
+        <div class="bg-green-100 rounded shadow p-4 flex items-center">
+            <div class="flex-shrink-0"><span class="inline-block w-8 h-8 bg-green-400 rounded-full flex items-center justify-center text-white font-bold">{{ $availableInspectors }}</span></div>
+            <div class="ml-4">
+                <div class="text-xs text-gray-500">Available</div>
+                <div class="text-lg font-bold text-green-800">Inspectors</div>
+            </div>
+        </div>
+        <div class="bg-yellow-100 rounded shadow p-4 flex items-center">
+            <div class="flex-shrink-0"><span class="inline-block w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold">{{ $busyInspectors }}</span></div>
+            <div class="ml-4">
+                <div class="text-xs text-gray-500">Busy</div>
+                <div class="text-lg font-bold text-yellow-800">Inspectors</div>
+            </div>
+        </div>
+        <div class="bg-gray-100 rounded shadow p-4 flex items-center">
+            <div class="flex-shrink-0"><span class="inline-block w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold">{{ $offlineInspectors }}</span></div>
+            <div class="ml-4">
+                <div class="text-xs text-gray-500">Offline</div>
+                <div class="text-lg font-bold text-gray-800">Inspectors</div>
+            </div>
         </div>
     </div>
-</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-blue-100 rounded shadow p-4 flex items-center">
+            <div class="flex-shrink-0"><span class="inline-block w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold">{{ $totalRequests }}</span></div>
+            <div class="ml-4">
+                <div class="text-xs text-gray-500">Total</div>
+                <div class="text-lg font-bold text-blue-800">Requests</div>
+            </div>
+        </div>
+        <div class="bg-yellow-100 rounded shadow p-4 flex items-center">
+            <div class="flex-shrink-0"><span class="inline-block w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold">{{ $pendingRequests }}</span></div>
+            <div class="ml-4">
+                <div class="text-xs text-gray-500">Pending</div>
+                <div class="text-lg font-bold text-yellow-800">Requests</div>
+            </div>
+        </div>
+        <div class="bg-indigo-100 rounded shadow p-4 flex items-center">
+            <div class="flex-shrink-0"><span class="inline-block w-8 h-8 bg-indigo-400 rounded-full flex items-center justify-center text-white font-bold">{{ $inProgressRequests }}</span></div>
+            <div class="ml-4">
+                <div class="text-xs text-gray-500">In Progress</div>
+                <div class="text-lg font-bold text-indigo-800">Requests</div>
+            </div>
+        </div>
+        <div class="bg-green-100 rounded shadow p-4 flex items-center">
+            <div class="flex-shrink-0"><span class="inline-block w-8 h-8 bg-green-400 rounded-full flex items-center justify-center text-white font-bold">{{ $completedRequests }}</span></div>
+            <div class="ml-4">
+                <div class="text-xs text-gray-500">Completed</div>
+                <div class="text-lg font-bold text-green-800">Requests</div>
+            </div>
+        </div>
+    </div>
+    <!-- Quick Links -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <a href="{{ route('headtech.assignments.index') }}" class="block bg-indigo-600 text-white rounded-lg shadow p-6 hover:bg-indigo-700 transition">
+            <div class="text-lg font-semibold mb-2">Assign Requests</div>
+            <div class="text-xs">Quickly assign pending inspection requests to available inspectors.</div>
+        </a>
+        <a href="{{ route('headtech.inspectors.index') }}" class="block bg-blue-600 text-white rounded-lg shadow p-6 hover:bg-blue-700 transition">
+            <div class="text-lg font-semibold mb-2">Manage Inspectors</div>
+            <div class="text-xs">View, add, or update inspector details and status.</div>
+        </a>
+        <a href="{{ route('headtech.inspection-requests.index') }}" class="block bg-green-600 text-white rounded-lg shadow p-6 hover:bg-green-700 transition">
+            <div class="text-lg font-semibold mb-2">All Inspection Requests</div>
+            <div class="text-xs">Browse, filter, and manage all inspection requests.</div>
+        </a>
+    </div>
+    <!-- Recent Activity -->
+    <div class="bg-white rounded shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Recent Activity</h2>
+        <ul class="text-sm text-gray-600 space-y-2">
+            @forelse($recentActivity as $activity)
+                <li class="flex items-center justify-between">
+                    <div>
+                        <span class="font-semibold text-indigo-700">{{ $activity->inspectionRequest->request_number ?? 'Request #' . $activity->inspection_request_id }}</span>
+                        <span class="mx-1">&mdash;</span>
+                        {{ $activity->getChangeSummary() }}
+                        @if($activity->changedByUser)
+                            <span class="text-xs text-gray-400">by {{ $activity->changedByUser->full_name ?? $activity->changedByUser->email }}</span>
+                        @endif
+                    </div>
+                    <span class="text-xs text-gray-400 ml-2">{{ $activity->getTimeElapsed() }}</span>
+                </li>
+            @empty
+                <li>No recent activity.</li>
+            @endforelse
+        </ul>
+    </div>
+    </div>
 @endsection 

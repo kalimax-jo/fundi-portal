@@ -126,6 +126,32 @@ class InspectionRequest extends Model
         return $this->hasMany(Payment::class);
     }
 
+    /**
+     * Get the client for the request (user or business partner)
+     */
+    public function getClientAttribute()
+    {
+        $client = $this->requester_type === 'business_partner'
+            ? $this->businessPartner
+            : $this->requester;
+
+        if ($client) {
+            $client->name = $this->requester_type === 'business_partner'
+                ? $client->name
+                : $client->full_name;
+        }
+
+        return $client;
+    }
+
+    /**
+     * Get the total amount for the request
+     */
+    public function getTotalAmountAttribute()
+    {
+        return $this->total_cost;
+    }
+
     // =============================================
     // SCOPES
     // =============================================

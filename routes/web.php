@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Admin Routes (Protected by admin middleware)
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin,head_technician'])->prefix('admin')->name('admin.')->group(function () {
     
     // Admin Dashboard
     Route::get('/dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
@@ -104,37 +104,56 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('reports/inspection-requests', [App\Http\Controllers\Admin\ReportController::class, 'inspectionRequests'])->name('reports.inspection-requests');
     Route::post('reports/generate', [App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
     Route::get('reports/export/{type}', [App\Http\Controllers\Admin\ReportController::class, 'export'])->name('reports.export');
-    
-    // Assignment Management
-    Route::prefix('assignments')->name('assignments.')->group(function () {
-        // Assignment workflow interface
-        Route::get('/', [App\Http\Controllers\Admin\AssignmentController::class, 'index'])->name('index');
-        
-        // Manual assignment
-        Route::post('/assign', [App\Http\Controllers\Admin\AssignmentController::class, 'assign'])->name('assign');
-        
-        // Auto-assignment
-        Route::post('/auto-assign', [App\Http\Controllers\Admin\AssignmentController::class, 'autoAssign'])->name('auto-assign');
-        
-        // Assignment management
-        Route::post('/unassign', [App\Http\Controllers\Admin\AssignmentController::class, 'unassign'])->name('unassign');
-        Route::post('/reassign', [App\Http\Controllers\Admin\AssignmentController::class, 'reassign'])->name('reassign');
-        
-        // Assignment statistics
-        Route::get('/statistics', [App\Http\Controllers\Admin\AssignmentController::class, 'statistics'])->name('statistics');
-    });
 });
 
-// Head Technician Portal Routes
-Route::middleware(['auth', 'role:head_technician'])->prefix('head-tech')->name('headtech.')->group(function () {
+// Head Technician Portal Routes (now outside admin group)
+Route::middleware(['auth', 'role:head_technician'])->prefix('ht')->name('headtech.')->group(function () {
     Route::get('/', [\App\Http\Controllers\HeadTech\DashboardController::class, 'index'])->name('dashboard');
     Route::resource('inspectors', \App\Http\Controllers\HeadTech\InspectorController::class);
     Route::resource('inspection-requests', \App\Http\Controllers\HeadTech\InspectionRequestController::class);
+
+    // Package Management for Head Tech
+    Route::resource('packages', \App\Http\Controllers\HeadTech\PackageController::class);
+    Route::post('packages/{package}/toggle-status', [\App\Http\Controllers\HeadTech\PackageController::class, 'toggleStatus'])->name('packages.toggle-status');
+    Route::post('packages/{package}/services', [\App\Http\Controllers\HeadTech\PackageController::class, 'addService'])->name('packages.add-service');
+    Route::delete('packages/{package}/services/{service}', [\App\Http\Controllers\HeadTech\PackageController::class, 'removeService'])->name('packages.remove-service');
+    Route::patch('packages/{package}/services/{service}', [\App\Http\Controllers\HeadTech\PackageController::class, 'updateService'])->name('packages.update-service');
+
+    // Service Management for Head Tech
+    Route::resource('services', \App\Http\Controllers\HeadTech\ServiceController::class);
+    Route::post('services/{service}/toggle-status', [\App\Http\Controllers\HeadTech\ServiceController::class, 'toggleStatus'])->name('services.toggle-status');
+
     Route::get('inspection-requests/assign', [\App\Http\Controllers\HeadTech\InspectionRequestController::class, 'assign'])->name('inspection-requests.assign-page');
-    Route::post('inspection-requests/{id}/assign', [\App\Http\Controllers\HeadTech\InspectionRequestController::class, 'assignInspector'])->name('inspection-requests.assign');
+    Route::post('inspection-requests/{inspectionRequest}/assign', [\App\Http\Controllers\HeadTech\InspectionRequestController::class, 'assignInspector'])->name('inspection-requests.assign');
+    // Assignments placeholder
+    Route::get('assignments', [\App\Http\Controllers\HeadTech\DashboardController::class, 'assignments'])->name('assignments.index');
+    // Diagnostic test route
+    Route::get('test-assign', function () {
+        return 'HeadTech Assign Test Route Works!';
+    });
 });
 
 // Test route for role middleware
 Route::middleware(['role:head_technician'])->get('/test-role', function () {
     return 'Role middleware works!';
+});
+
+// Inspector Portal
+Route::middleware(['auth', 'role:inspector'])->prefix('inspector')->name('inspector.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\InspectorDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/assignments', [\App\Http\Controllers\InspectorDashboardController::class, 'assignments'])->name('assignments');
+    Route::get('/pending', [\App\Http\Controllers\InspectorDashboardController::class, 'pending'])->name('pending');
+    Route::get('/in-progress', [\App\Http\Controllers\InspectorDashboardController::class, 'inprogress'])->name('inprogress');
+    Route::get('/complete', [\App\Http\Controllers\InspectorDashboardController::class, 'complete'])->name('complete');
+    Route::get('/requests/{id}', [\App\Http\Controllers\InspectorDashboardController::class, 'show'])->name('requests.show');
+    Route::post('/requests/{id}/start', [\App\Http\Controllers\InspectorDashboardController::class, 'startInspection'])->name('requests.start');
+    Route::get('/requests/{id}/report', [\App\Http\Controllers\Inspector\InspectionReportController::class, 'showForm'])->name('requests.report');
+    Route::post('/reports/{id}/autosave', [\App\Http\Controllers\Inspector\InspectionReportController::class, 'autoSave'])->name('reports.autosave');
+    Route::post('/reports/{id}/complete', [\App\Http\Controllers\Inspector\InspectionReportController::class, 'complete'])->name('reports.complete');
+
+    // Settings
+    Route::get('/settings', [\App\Http\Controllers\InspectorDashboardController::class, 'settings'])->name('settings');
+    Route::post('/settings/profile', [\App\Http\Controllers\InspectorDashboardController::class, 'updateProfile'])->name('settings.profile.update');
+    Route::post('/settings/password', [\App\Http\Controllers\InspectorDashboardController::class, 'updatePassword'])->name('settings.password.update');
+    Route::post('/settings/availability', [\App\Http\Controllers\InspectorDashboardController::class, 'toggleAvailability'])->name('settings.availability.toggle');
 });

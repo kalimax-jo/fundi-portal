@@ -12,7 +12,11 @@ class InspectorController extends Controller
     public function index()
     {
         $inspectors = Inspector::with('user')->paginate(15);
-        return view('headtech.inspectors.index', compact('inspectors'));
+        $availableCount = Inspector::available()->count();
+        $busyCount = Inspector::busy()->count();
+        $offlineCount = Inspector::offline()->count();
+        $totalCount = Inspector::count();
+        return view('headtech.inspectors.index', compact('inspectors', 'availableCount', 'busyCount', 'offlineCount', 'totalCount'));
     }
 
     public function create()
@@ -28,19 +32,33 @@ class InspectorController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|max:20',
             'certification_level' => 'required|in:basic,advanced,expert',
+            'experience_years' => 'nullable|integer|min:0',
+            'certification_expiry' => 'nullable|date',
+            'specializations' => 'nullable|string',
+            'equipment_assigned' => 'nullable|string',
+            'password' => 'required|string|min:8',
         ]);
         $user = User::create([
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
-            'password' => bcrypt('password'), // Default password, should be changed
+            'password' => bcrypt($validated['password']),
         ]);
+        // Assign Certified Inspector role
+        $inspectorRole = \App\Models\Role::where('name', 'inspector')->first();
+        if ($inspectorRole) {
+            $user->roles()->attach($inspectorRole->id);
+        }
         $inspector = Inspector::create([
             'user_id' => $user->id,
             'inspector_code' => 'INS' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
             'certification_level' => $validated['certification_level'],
             'availability_status' => 'available',
+            'experience_years' => $validated['experience_years'] ?? null,
+            'certification_expiry' => $validated['certification_expiry'] ?? null,
+            'specializations' => isset($validated['specializations']) ? array_map('trim', explode(',', $validated['specializations'])) : null,
+            'equipment_assigned' => isset($validated['equipment_assigned']) ? array_map('trim', explode(',', $validated['equipment_assigned'])) : null,
         ]);
         return redirect()->route('headtech.inspectors.index')->with('success', 'Inspector created successfully.');
     }
@@ -65,6 +83,10 @@ class InspectorController extends Controller
             'email' => 'required|email|unique:users,email,' . $inspector->user_id,
             'phone' => 'required|string|max:20',
             'certification_level' => 'required|in:basic,advanced,expert',
+            'experience_years' => 'nullable|integer|min:0',
+            'certification_expiry' => 'nullable|date',
+            'specializations' => 'nullable|string',
+            'equipment_assigned' => 'nullable|string',
         ]);
         $inspector->user->update([
             'first_name' => $validated['first_name'],
@@ -72,8 +94,17 @@ class InspectorController extends Controller
             'email' => $validated['email'],
             'phone' => $validated['phone'],
         ]);
+        if ($request->filled('password')) {
+            $inspector->user->update([
+                'password' => bcrypt($request->input('password')),
+            ]);
+        }
         $inspector->update([
             'certification_level' => $validated['certification_level'],
+            'experience_years' => $validated['experience_years'] ?? null,
+            'certification_expiry' => $validated['certification_expiry'] ?? null,
+            'specializations' => isset($validated['specializations']) ? array_map('trim', explode(',', $validated['specializations'])) : null,
+            'equipment_assigned' => isset($validated['equipment_assigned']) ? array_map('trim', explode(',', $validated['equipment_assigned'])) : null,
         ]);
         return redirect()->route('headtech.inspectors.index')->with('success', 'Inspector updated successfully.');
     }

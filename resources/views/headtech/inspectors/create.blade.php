@@ -3,35 +3,60 @@
 @section('title', 'Add Inspector')
 
 @section('content')
-<div class="py-8 max-w-xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Add Inspector</h1>
-    <form method="POST" action="{{ route('headtech.inspectors.store') }}">
+<div class="py-8 max-w-2xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Add Inspector</h1>
+    <form action="{{ route('headtech.inspectors.store') }}" method="POST" class="bg-white rounded shadow p-6 space-y-4">
         @csrf
-        <div class="mb-4">
-            <label class="block mb-1">First Name</label>
-            <input type="text" name="first_name" class="w-full border rounded px-3 py-2" required>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">First Name</label>
+                <input type="text" name="first_name" required class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Last Name</label>
+                <input type="text" name="last_name" required class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Email</label>
+                <input type="email" name="email" required class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Phone</label>
+                <input type="text" name="phone" required class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Certification Level</label>
+                <select name="certification_level" required class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+                    <option value="basic">Basic</option>
+                    <option value="advanced">Advanced</option>
+                    <option value="expert">Expert</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Experience Years</label>
+                <input type="number" name="experience_years" min="0" class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Certification Expiry</label>
+                <input type="date" name="certification_expiry" class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">
+            </div>
+        </div>
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Specializations <span class="text-gray-400">(comma separated)</span></label>
+            <input type="text" name="specializations" class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="e.g. plumbing, electrical">
+        </div>
+        <div>
+            <label class="block text-xs text-gray-500 mb-1">Equipment Assigned <span class="text-gray-400">(comma separated)</span></label>
+            <input type="text" name="equipment_assigned" class="w-full rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm" placeholder="e.g. ladder, multimeter">
         </div>
         <div class="mb-4">
-            <label class="block mb-1">Last Name</label>
-            <input type="text" name="last_name" class="w-full border rounded px-3 py-2" required>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" name="password" id="password" class="w-full border rounded px-3 py-2" required minlength="8">
         </div>
-        <div class="mb-4">
-            <label class="block mb-1">Email</label>
-            <input type="email" name="email" class="w-full border rounded px-3 py-2" required>
+        <div class="flex justify-end gap-2">
+            <a href="{{ route('headtech.inspectors.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">Cancel</a>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">Add Inspector</button>
         </div>
-        <div class="mb-4">
-            <label class="block mb-1">Phone</label>
-            <input type="text" name="phone" class="w-full border rounded px-3 py-2" required>
-        </div>
-        <div class="mb-4">
-            <label class="block mb-1">Certification Level</label>
-            <select name="certification_level" class="w-full border rounded px-3 py-2" required>
-                <option value="basic">Basic</option>
-                <option value="advanced">Advanced</option>
-                <option value="expert">Expert</option>
-            </select>
-        </div>
-        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Create Inspector</button>
     </form>
 </div>
 @endsection 

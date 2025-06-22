@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-gray-50">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-gray-100">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,79 +7,70 @@
 
     <title>@yield('title', 'Fundi Portal')</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-    <!-- Tailwind CSS CDN (for consistent styling) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vite/Tailwind CSS -->
+    @vite('resources/css/app.css')
 
     @stack('styles')
 </head>
 <body class="h-full">
-    <div class="min-h-full">
-        <!-- Navigation for regular pages -->
-        @auth
-            <nav class="bg-white border-b border-gray-200">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between">
-                    <a href="/" class="text-lg font-semibold text-gray-700">Fundi Portal</a>
-
-                    <div class="space-x-2">
-                        @if(auth()->user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="text-gray-700 hover:text-gray-900 px-3">Admin Dashboard</a>
-                        @else
-                            <a href="{{ route('dashboard') }}" class="text-gray-700 hover:text-gray-900 px-3">Dashboard</a>
-                        @endif
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
+<div class="flex flex-col min-h-screen">
+    @auth
+        @php $user = Auth::user(); @endphp
+        
+        <div class="flex flex-1">
+            <!-- Sidebar -->
+            <aside class="w-64 bg-indigo-800 text-white flex-col py-6 px-4 hidden md:flex">
+                @if($user->isInspector())
+                    <div class="mb-8 text-xl font-bold tracking-wide">Inspector Portal</div>
+                    <nav class="flex-1 space-y-2">
+                        <a href="{{ route('inspector.dashboard') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('inspector.dashboard') ? 'bg-indigo-900' : '' }}">Dashboard</a>
+                        <a href="{{ route('inspector.assignments') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('inspector.assignments') ? 'bg-indigo-900' : '' }}">My Assignments</a>
+                        <a href="{{ route('inspector.pending') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('inspector.pending') ? 'bg-indigo-900' : '' }}">Pending</a>
+                        <a href="{{ route('inspector.inprogress') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('inspector.inprogress') ? 'bg-indigo-900' : '' }}">In Progress</a>
+                        <a href="{{ route('inspector.complete') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('inspector.complete') ? 'bg-indigo-900' : '' }}">Completed</a>
+                    </nav>
+                @elseif($user->isHeadTechnician())
+                    @include('layouts.partials.headtech-navigation')
+                @elseif($user->isAdmin())
+                     @include('layouts.partials.admin-navigation')
+                @endif
+            </aside>
+            
+            <div class="flex-1 flex flex-col">
+                <!-- Top bar -->
+                <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                    <button class="md:hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                    <div class="flex-1">@yield('page-header')</div>
+                    <div>
+                        <span class="font-semibold">{{ $user->full_name }}</span>
+                        <form method="POST" action="{{ route('logout') }}" class="inline ml-4">
                             @csrf
-                            <button type="submit" class="text-gray-700 hover:text-gray-900 px-3">Logout</button>
+                            <button type="submit" class="text-sm text-gray-600 hover:underline">Logout</button>
                         </form>
                     </div>
-                </div>
-            </nav>
-        @endauth
-
-        <!-- Main content -->
-        <main>
-            <!-- Flash Messages -->
-            @if (session('success'))
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div class="rounded-md bg-green-50 p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.53a.75.75 0 00-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div class="rounded-md bg-red-50 p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
+                </header>
+                
+                <!-- Main content -->
+                <main class="flex-grow bg-gray-50 p-4 sm:p-6 lg:p-8">
+                    @yield('content')
+                </main>
+            </div>
+        </div>
+    @else
+        <!-- Layout for guest users -->
+        <main class="flex-grow">
             @yield('content')
         </main>
-    </div>
+    @endauth
 
-    @stack('scripts')
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+            &copy; {{ date('Y') }} Fundi Portal. All rights reserved.
+        </div>
+    </footer>
+</div>
+@stack('scripts')
 </body>
 </html>

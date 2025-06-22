@@ -38,6 +38,9 @@ class LoginController extends Controller
             if ($user->isAdmin()) {
                 return redirect()->route('admin.dashboard');
             }
+            if ($user->isInspector()) {
+                return redirect()->route('inspector.dashboard');
+            }
             // Add more role checks as needed
             return redirect()->intended(route('dashboard'));
         }

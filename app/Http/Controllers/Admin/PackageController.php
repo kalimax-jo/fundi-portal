@@ -55,7 +55,15 @@ class PackageController extends Controller
 
         $packages = $query->paginate(15)->withQueryString();
 
-        return view('admin.packages.index', compact('packages'));
+        $stats = [
+            'total' => InspectionPackage::count(),
+            'active' => InspectionPackage::where('is_active', true)->count(),
+            'inactive' => InspectionPackage::where('is_active', false)->count(),
+            'fixed_price' => InspectionPackage::where('is_custom_quote', false)->count(),
+            'custom_quote' => InspectionPackage::where('is_custom_quote', true)->count(),
+        ];
+
+        return view('admin.packages.index', compact('packages', 'stats'));
     }
 
     /**
@@ -132,7 +140,12 @@ class PackageController extends Controller
      */
     public function show(InspectionPackage $package)
     {
-        $package->load('services');
+        $package->load([
+            'services', 
+            'inspectionRequests' => function ($query) {
+                $query->with(['requester', 'businessPartner'])->latest()->take(10);
+            }
+        ]);
         
         return view('admin.packages.show', compact('package'));
     }

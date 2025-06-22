@@ -82,7 +82,7 @@ class InspectionRequestController extends Controller
 
         // Get filter options
         $businessPartners = \App\Models\BusinessPartner::active()->pluck('name', 'id');
-        $inspectors = \App\Models\Inspector::with('user')->get()->pluck('user.full_name', 'id');
+        $inspectors = \App\Models\Inspector::with('user')->get();
         $packages = \App\Models\InspectionPackage::active()->pluck('display_name', 'id');
 
         // Calculate statistics
@@ -181,8 +181,8 @@ class InspectionRequestController extends Controller
             \DB::beginTransaction();
 
             $inspector = Inspector::findOrFail($request->inspector_id);
-            if ($inspector->availability_status !== 'available') {
-                throw new \Exception('Inspector is not available for assignment.');
+            if ($inspector->availability_status === 'offline') {
+                throw new \Exception('Inspector is offline and cannot be assigned.');
             }
 
             $inspectionRequest->update([
@@ -193,8 +193,6 @@ class InspectionRequestController extends Controller
                 'scheduled_time' => $request->scheduled_time,
                 'status' => 'assigned'
             ]);
-
-            $inspector->update(['availability_status' => 'busy']);
 
             \DB::commit();
 

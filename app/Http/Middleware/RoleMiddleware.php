@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleMiddleware
 {
-    public function handle($request, Closure $next, $role)
+    public function handle($request, Closure $next, $roles)
     {
-        if (!Auth::check() || !$request->user()->hasRole($role)) {
+        $roleList = explode(',', $roles);
+        if (!Auth::check() || !collect($roleList)->contains(fn($role) => $request->user()->hasRole(trim($role)))) {
             abort(403, 'Unauthorized');
         }
         return $next($request);

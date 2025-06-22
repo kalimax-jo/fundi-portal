@@ -45,9 +45,24 @@ class ServiceController extends Controller
         $services = $query->paginate(15)->withQueryString();
 
         // Get categories for filter
-        $categories = InspectionService::distinct()->pluck('category')->sort();
+        $categories = InspectionService::distinct()
+            ->pluck('category')
+            ->mapWithKeys(function ($category) {
+                return [$category => ['name' => ucfirst(str_replace('_', ' ', $category))]];
+            })
+            ->sort();
 
-        return view('admin.services.index', compact('services', 'categories'));
+        $stats = [
+            'total' => InspectionService::count(),
+            'active' => InspectionService::where('is_active', true)->count(),
+            'inactive' => InspectionService::where('is_active', false)->count(),
+            'by_category' => InspectionService::query()
+                ->select('category', DB::raw('count(*) as count'))
+                ->groupBy('category')
+                ->pluck('count', 'category'),
+        ];
+
+        return view('admin.services.index', compact('services', 'categories', 'stats'));
     }
 
     /**
@@ -124,8 +139,9 @@ class ServiceController extends Controller
     public function show(InspectionService $service)
     {
         $service->load('packages');
+        $usageStats = $service->getUsageStats();
         
-        return view('admin.services.show', compact('service'));
+        return view('admin.services.show', compact('service', 'usageStats'));
     }
 
     /**

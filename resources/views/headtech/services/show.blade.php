@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.headtech')
 
 @section('title', 'Service Details')
 
@@ -24,7 +24,7 @@
         </div>
     </div>
     <div class="mt-4 flex space-x-3 md:ml-4 md:mt-0">
-        <a href="{{ route('admin.services.edit', $service) }}" 
+        <a href="{{ route('headtech.services.edit', $service) }}" 
            class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
             <svg class="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
@@ -32,7 +32,7 @@
             </svg>
             Edit Service
         </a>
-        <a href="{{ route('admin.services.index') }}" 
+        <a href="{{ route('headtech.services.index') }}" 
            class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
             <svg class="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
@@ -211,7 +211,7 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ route('admin.packages.show', $package) }}" class="text-indigo-600 hover:text-indigo-900">View Package</a>
+                                    <a href="{{ route('headtech.packages.show', $package) }}" class="text-indigo-600 hover:text-indigo-900">View Package</a>
                                 </td>
                             </tr>
                             @endforeach
@@ -246,8 +246,8 @@
                             </div>
                         </div>
                         <div class="ml-4">
-                            <dt class="text-sm font-medium text-gray-500">Total Inspections</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $usageStats['total_inspections'] }}</dd>
+                            <dt class="text-sm font-medium text-gray-500">Total Requests</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ $usageStats['total_requests'] ?? 0 }}</dd>
                         </div>
                     </div>
                 </div>

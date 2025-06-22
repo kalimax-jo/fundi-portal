@@ -40,14 +40,11 @@ class InspectionPackage extends Model
     // =============================================
 
     /**
-     * Get services included in this package
+     * The services that are included in this package.
      */
-    public function services(): BelongsToMany
+    public function services()
     {
-        return $this->belongsToMany(InspectionService::class, 'package_services', 'package_id', 'service_id')
-            ->withPivot('is_mandatory', 'sort_order')
-            ->withTimestamps()
-            ->orderBy('package_services.sort_order');
+        return $this->belongsToMany(InspectionService::class, 'package_services', 'package_id', 'service_id')->withPivot('is_mandatory');
     }
 
     /**
@@ -465,5 +462,13 @@ class InspectionPackage extends Model
     {
         $clientTypes = self::getTargetClientTypes();
         return $clientTypes[$this->target_client_type] ?? ucfirst($this->target_client_type);
+    }
+
+    /**
+     * Get total duration of all services in minutes.
+     */
+    public function getTotalDuration(): int
+    {
+        return $this->services()->sum('estimated_duration_minutes');
     }
 }

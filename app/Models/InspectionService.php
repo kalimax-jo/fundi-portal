@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class InspectionService extends Model
 {
@@ -36,13 +37,11 @@ class InspectionService extends Model
     // =============================================
 
     /**
-     * Get packages that include this service
+     * Get the packages that include this service.
      */
-    public function packages(): BelongsToMany
+    public function packages()
     {
-        return $this->belongsToMany(InspectionPackage::class, 'package_services', 'service_id', 'package_id')
-            ->withPivot('is_mandatory', 'sort_order')
-            ->withTimestamps();
+        return $this->belongsToMany(InspectionPackage::class, 'package_services', 'service_id', 'package_id');
     }
 
     /**
@@ -160,17 +159,7 @@ class InspectionService extends Model
      */
     public function getCategoryDisplayName(): string
     {
-        $categoryNames = [
-            'exterior' => 'Exterior Inspection',
-            'interior' => 'Interior Inspection',
-            'plumbing' => 'Plumbing Systems',
-            'electrical' => 'Electrical Systems',
-            'foundation' => 'Foundation & Structure',
-            'environmental' => 'Environmental Assessment',
-            'safety' => 'Safety & Security'
-        ];
-
-        return $categoryNames[$this->category] ?? ucfirst($this->category);
+        return ucwords(str_replace('_', ' ', $this->category));
     }
 
     /**
@@ -178,14 +167,12 @@ class InspectionService extends Model
      */
     public function getFormattedDuration(): string
     {
+        if ($this->estimated_duration_minutes < 60) {
+            return $this->estimated_duration_minutes . ' min';
+        }
         $hours = floor($this->estimated_duration_minutes / 60);
         $minutes = $this->estimated_duration_minutes % 60;
-
-        if ($hours > 0) {
-            return $hours . 'h ' . ($minutes > 0 ? $minutes . 'm' : '');
-        }
-
-        return $minutes . ' minutes';
+        return $hours . 'h ' . $minutes . 'm';
     }
 
     /**
@@ -248,20 +235,46 @@ class InspectionService extends Model
     /**
      * Get usage statistics for this service
      */
-    public function getUsageStatistics(): array
+    public function getUsageStats(): array
     {
-        // TODO: Update when InspectionFinding model is created
-        $totalFindings = 0; // $this->inspectionFindings()->count();
-        $criticalFindings = 0; // $this->inspectionFindings()->where('condition_rating', 'critical')->count();
-        $thisMonthFindings = 0; // $this->inspectionFindings()->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+        $packageIds = $this->packages()->pluck('inspection_packages.id');
+        $requestsQuery = InspectionRequest::whereIn('package_id', $packageIds);
+
+        $requestsCount = $requestsQuery->count();
+        $inspectionsThisMonth = $requestsQuery->clone()->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+
+        $averageDuration = $requestsQuery->clone()
+            ->whereNotNull('started_at')
+            ->whereNotNull('completed_at')
+            ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, started_at, completed_at)) as avg_duration')
+            ->value('avg_duration');
+
+        $mostFrequentPackageId = $requestsQuery->clone()
+            ->select('package_id', DB::raw('count(*) as count'))
+            ->groupBy('package_id')
+            ->orderByDesc('count')
+            ->pluck('package_id')
+            ->first();
+
+        $mostFrequentPackage = $mostFrequentPackageId ? InspectionPackage::find($mostFrequentPackageId) : null;
+
+        $totalRevenue = Payment::whereIn('inspection_request_id', 
+            $requestsQuery->clone()->pluck('id')
+        )->sum('amount');
+
+        $statusCounts = $requestsQuery->clone()
+            ->select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status');
 
         return [
-            'total_inspections' => $totalFindings,
-            'critical_findings' => $criticalFindings,
-            'critical_rate' => $totalFindings > 0 ? round(($criticalFindings / $totalFindings) * 100, 2) : 0,
-            'this_month_inspections' => $thisMonthFindings,
-            'packages_using_service' => $this->getPackagesCount(),
-            'estimated_duration_minutes' => $this->estimated_duration_minutes
+            'total_requests' => $requestsCount,
+            'inspections_this_month' => $inspectionsThisMonth,
+            'average_duration' => round($averageDuration ?? 0),
+            'most_frequent_package' => $mostFrequentPackage->display_name ?? 'N/A',
+            'total_revenue' => $totalRevenue,
+            'status_breakdown' => $statusCounts,
+            'packages_count' => $packageIds->count(),
         ];
     }
 
