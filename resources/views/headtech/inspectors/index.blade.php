@@ -49,9 +49,7 @@
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Level</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Specializations</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Experience</th>
+                       <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Experience</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cert. Expiry</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Equipment</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -67,9 +65,7 @@
                             <td class="px-4 py-2">{{ $inspector->user->email ?? '-' }}</td>
                             <td class="px-4 py-2">{{ $inspector->user->phone ?? '-' }}</td>
                             <td class="px-4 py-2">{{ $inspector->inspector_code }}</td>
-                            <td class="px-4 py-2">{{ ucfirst($inspector->certification_level) }}</td>
-                            <td class="px-4 py-2">{{ is_array($inspector->specializations) ? implode(', ', $inspector->specializations) : ($inspector->specializations ?? '-') }}</td>
-                            <td class="px-4 py-2">{{ $inspector->experience_years ?? '-' }}</td>
+                           <td class="px-4 py-2">{{ $inspector->experience_years ?? '-' }}</td>
                             <td class="px-4 py-2">{{ $inspector->certification_expiry ? $inspector->certification_expiry->format('Y-m-d') : '-' }}</td>
                             <td class="px-4 py-2">{{ is_array($inspector->equipment_assigned) ? implode(', ', $inspector->equipment_assigned) : ($inspector->equipment_assigned ?? '-') }}</td>
                             <td class="px-4 py-2">

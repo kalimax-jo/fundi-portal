@@ -121,6 +121,13 @@ class BusinessPartnerController extends Controller
             'contract_end_date' => 'nullable|date|after:partnership_start_date',
             'notes' => 'nullable|string',
             
+            // New sync and failover validation
+            'deployment_type' => ['required', Rule::in(['centralized', 'dedicated'])],
+            'sync_url' => 'nullable|url|required_if:deployment_type,dedicated',
+            'api_key' => 'nullable|string|max:255|required_if:deployment_type,dedicated',
+            'sync_type' => ['nullable', Rule::in(['public_api', 'vpn']), 'required_if:deployment_type,dedicated'],
+            'failover_active' => 'nullable|boolean',
+
             // Primary contact user details
             'primary_contact_first_name' => 'required|string|max:100',
             'primary_contact_last_name' => 'required|string|max:100',
@@ -138,29 +145,19 @@ class BusinessPartnerController extends Controller
         try {
             DB::beginTransaction();
 
-            // Create the business partner
-            $partner = BusinessPartner::create([
-                'name' => $request->name,
-                'type' => $request->type,
-                'registration_number' => $request->registration_number,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'website' => $request->website,
-                'address' => $request->address,
-                'city' => $request->city,
-                'country' => $request->country,
-                'contact_person' => $request->contact_person,
-                'contact_phone' => $request->contact_phone,
-                'contact_email' => $request->contact_email,
-                'tier' => $request->tier,
-                'discount_percentage' => $request->discount_percentage ?? 0,
-                'billing_cycle' => $request->billing_cycle,
-                'credit_limit' => $request->credit_limit,
-                'partnership_start_date' => $request->partnership_start_date,
-                'contract_end_date' => $request->contract_end_date,
-                'partnership_status' => 'active',
-                'notes' => $request->notes,
+            $partnerData = $request->only([
+                'name', 'type', 'registration_number', 'email', 'phone', 'website',
+                'address', 'city', 'country', 'contact_person', 'contact_phone',
+                'contact_email', 'tier', 'discount_percentage', 'billing_cycle',
+                'credit_limit', 'partnership_start_date', 'contract_end_date', 'notes',
+                'deployment_type', 'sync_url', 'api_key', 'sync_type'
             ]);
+            
+            $partnerData['failover_active'] = $request->has('failover_active');
+            $partnerData['partnership_status'] = 'active';
+
+            // Create the business partner
+            $partner = BusinessPartner::create($partnerData);
 
             // Create primary contact user
             $businessPartnerRole = Role::where('name', 'business_partner')->first();
@@ -275,7 +272,7 @@ class BusinessPartnerController extends Controller
     public function update(Request $request, BusinessPartner $businessPartner)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:255', Rule::unique('business_partners')->ignore($businessPartner->id)],
+            'name' => 'required|string|max:255|unique:business_partners,name,' . $businessPartner->id,
             'type' => 'required|in:bank,insurance,microfinance,mortgage,investment',
             'registration_number' => 'nullable|string|max:100',
             'email' => ['required', 'email', 'max:255', Rule::unique('business_partners')->ignore($businessPartner->id)],
@@ -293,8 +290,15 @@ class BusinessPartnerController extends Controller
             'credit_limit' => 'nullable|numeric|min:0',
             'partnership_start_date' => 'required|date',
             'contract_end_date' => 'nullable|date|after:partnership_start_date',
-            'partnership_status' => 'required|in:active,inactive,suspended',
+            'partnership_status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
             'notes' => 'nullable|string',
+
+            // New sync and failover validation
+            'deployment_type' => ['required', Rule::in(['centralized', 'dedicated'])],
+            'sync_url' => 'nullable|url|required_if:deployment_type,dedicated',
+            'api_key' => 'nullable|string|max:255|required_if:deployment_type,dedicated',
+            'sync_type' => ['nullable', Rule::in(['public_api', 'vpn']), 'required_if:deployment_type,dedicated'],
+            'failover_active' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -304,18 +308,37 @@ class BusinessPartnerController extends Controller
         }
 
         try {
-            $businessPartner->update($request->only([
-                'name', 'type', 'registration_number', 'email', 'phone', 
-                'website', 'address', 'city', 'country', 'contact_person',
-                'contact_phone', 'contact_email', 'tier', 'discount_percentage',
-                'billing_cycle', 'credit_limit', 'partnership_start_date',
-                'contract_end_date', 'partnership_status', 'notes'
-            ]));
+            DB::beginTransaction();
+
+            $partnerData = $request->only([
+                'name', 'type', 'registration_number', 'email', 'phone', 'website',
+                'address', 'city', 'country', 'contact_person', 'contact_phone',
+                'contact_email', 'tier', 'discount_percentage', 'billing_cycle',
+                'credit_limit', 'partnership_start_date', 'contract_end_date',
+                'partnership_status', 'notes',
+                'deployment_type', 'sync_url', 'api_key', 'sync_type'
+            ]);
+
+            $partnerData['failover_active'] = $request->has('failover_active');
+
+            $businessPartner->update($partnerData);
+
+            // If deployment is not dedicated, nullify sync fields
+            if ($request->deployment_type !== 'dedicated') {
+                $businessPartner->update([
+                    'sync_url' => null,
+                    'api_key' => null,
+                    'sync_type' => 'public_api', // reset to default
+                ]);
+            }
+            
+            DB::commit();
 
             return redirect()->route('admin.business-partners.show', $businessPartner)
                 ->with('success', 'Business partner updated successfully.');
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->back()
                 ->with('error', 'Failed to update business partner: ' . $e->getMessage())
                 ->withInput();

@@ -97,7 +97,7 @@ class InspectionRequest extends Model
     /**
      * Get the assigned inspector
      */
-    public function assignedInspector(): BelongsTo
+    public function inspector(): BelongsTo
     {
         return $this->belongsTo(Inspector::class, 'assigned_inspector_id');
     }
@@ -150,6 +150,47 @@ class InspectionRequest extends Model
     public function getTotalAmountAttribute()
     {
         return $this->total_cost;
+    }
+
+    /**
+     * Get the display text for the status.
+     *
+     * @return string
+     */
+    public function getStatusTextAttribute()
+    {
+        return ucwords(str_replace('_', ' ', $this->status));
+    }
+
+    /**
+     * Get the color associated with the status.
+     *
+     * @return string
+     */
+    public function getStatusColorAttribute()
+    {
+        switch ($this->status) {
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'assigned':
+                return 'bg-blue-100 text-blue-800';
+            case 'in_progress':
+                return 'bg-purple-100 text-purple-800';
+            case 'completed':
+                return 'bg-green-100 text-green-800';
+            case 'cancelled':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    /**
+     * Get the inspection report for this request
+     */
+    public function report()
+    {
+        return $this->hasOne(\App\Models\InspectionReport::class, 'inspection_request_id', 'id');
     }
 
     // =============================================
@@ -213,19 +254,19 @@ class InspectionRequest extends Model
     }
 
     /**
-     * Scope to get individual client requests
+     * Scope to get individual requests
      */
     public function scopeIndividualRequests($query)
     {
-        return $query->where('requester_type', 'individual');
+        return $query->byRequesterType('individual');
     }
 
     /**
-     * Scope to get business partner requests
+     * Scope to get business requests
      */
     public function scopeBusinessRequests($query)
     {
-        return $query->where('requester_type', 'business_partner');
+        return $query->byRequesterType('business_partner');
     }
 
     /**
@@ -237,7 +278,7 @@ class InspectionRequest extends Model
     }
 
     /**
-     * Scope to get urgent requests
+     * Scope to get urgent/emergency requests
      */
     public function scopeUrgent($query)
     {
@@ -245,134 +286,108 @@ class InspectionRequest extends Model
     }
 
     /**
-     * Scope to get overdue requests
+     * Scope to get requests that are overdue
      */
     public function scopeOverdue($query)
     {
-        return $query->where('scheduled_date', '<', Carbon::now()->toDateString())
-            ->whereIn('status', ['assigned', 'in_progress']);
+        return $query->where('status', '!=', 'completed')
+            ->where('scheduled_date', '<', now());
     }
 
     /**
-     * Scope to get today's inspections
+     * Scope to get requests scheduled for today
      */
     public function scopeToday($query)
     {
-        return $query->whereDate('scheduled_date', Carbon::today());
+        return $query->whereDate('scheduled_date', now());
     }
 
     /**
-     * Scope to get this week's inspections
+     * Scope to get requests scheduled for this week
      */
     public function scopeThisWeek($query)
     {
         return $query->whereBetween('scheduled_date', [
-            Carbon::now()->startOfWeek(),
-            Carbon::now()->endOfWeek()
+            now()->startOfWeek(),
+            now()->endOfWeek()
         ]);
     }
 
     /**
-     * Scope to search requests
+     * Scope a query to only include requests matching a search term.
      */
     public function scopeSearch($query, $term)
     {
+        if (empty($term)) {
+            return $query;
+        }
+
         return $query->where(function ($q) use ($term) {
             $q->where('request_number', 'like', "%{$term}%")
-              ->orWhereHas('property', function ($pq) use ($term) {
-                  $pq->where('property_code', 'like', "%{$term}%")
-                    ->orWhere('address', 'like', "%{$term}%");
+                ->orWhere('purpose', 'like', "%{$term}%")
+                ->orWhereHas('property', function ($propQ) use ($term) {
+                    $propQ->where('street_address', 'like', "%{$term}%")
+                          ->orWhere('city', 'like', "%{$term}%");
               })
-              ->orWhereHas('requester', function ($uq) use ($term) {
-                  $uq->where('first_name', 'like', "%{$term}%")
-                    ->orWhere('last_name', 'like', "%{$term}%")
-                    ->orWhere('email', 'like', "%{$term}%");
+                ->orWhereHas('requester', function ($userQ) use ($term) {
+                    $userQ->where('first_name', 'like', "%{$term}%")
+                          ->orWhere('last_name', 'like', "%{$term}%");
               });
         });
     }
 
     // =============================================
-    // HELPER METHODS
+    // HELPERS & LOGIC
     // =============================================
 
     /**
-     * Generate unique request number
+     * Generate a unique request number
      */
     public static function generateRequestNumber(): string
     {
-        do {
-            $code = 'REQ' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-        } while (self::where('request_number', $code)->exists());
-
-        return $code;
+        return 'INSP-' . now()->format('Ymd') . '-' . strtoupper(uniqid());
     }
 
     /**
-     * Get status display name
+     * Get display name for status
      */
     public function getStatusDisplayName(): string
     {
-        $statuses = [
-            'pending' => 'Pending Assignment',
-            'assigned' => 'Assigned to Inspector',
-            'in_progress' => 'Inspection in Progress',
-            'completed' => 'Completed',
-            'cancelled' => 'Cancelled',
-            'on_hold' => 'On Hold'
-        ];
-
-        return $statuses[$this->status] ?? ucfirst($this->status);
+        return ucwords(str_replace('_', ' ', $this->status));
     }
 
     /**
-     * Get urgency display name with color
+     * Get info for urgency
      */
     public function getUrgencyInfo(): array
     {
-        $urgencyInfo = [
-            'normal' => ['name' => 'Normal', 'color' => '#10B981', 'priority' => 1],
-            'urgent' => ['name' => 'Urgent', 'color' => '#F59E0B', 'priority' => 2],
-            'emergency' => ['name' => 'Emergency', 'color' => '#EF4444', 'priority' => 3]
+        $urgencyMap = [
+            'normal' => ['label' => 'Normal', 'color' => 'gray'],
+            'urgent' => ['label' => 'Urgent', 'color' => 'yellow'],
+            'emergency' => ['label' => 'Emergency', 'color' => 'red'],
         ];
 
-        return $urgencyInfo[$this->urgency] ?? $urgencyInfo['normal'];
+        return $urgencyMap[$this->urgency] ?? $urgencyMap['normal'];
     }
 
     /**
-     * Get purpose display name
+     * Get display name for purpose
      */
     public function getPurposeDisplayName(): string
     {
-        $purposes = [
-            'rental' => 'Rental Property',
-            'sale' => 'Property Sale',
-            'purchase' => 'Property Purchase',
-            'loan_collateral' => 'Loan Collateral',
-            'insurance' => 'Insurance Requirement',
-            'maintenance' => 'Maintenance Check',
-            'other' => 'Other'
-        ];
-
-        return $purposes[$this->purpose] ?? ucfirst($this->purpose);
+        return ucwords(str_replace('_', ' ', $this->purpose));
     }
 
     /**
-     * Get payment status display name
+     * Get display name for payment status
      */
     public function getPaymentStatusDisplayName(): string
     {
-        $statuses = [
-            'pending' => 'Payment Pending',
-            'partial' => 'Partially Paid',
-            'paid' => 'Fully Paid',
-            'refunded' => 'Refunded'
-        ];
-
-        return $statuses[$this->payment_status] ?? ucfirst($this->payment_status);
+        return ucwords(str_replace('_', ' ', $this->payment_status));
     }
 
     /**
-     * Check if request is from business partner
+     * Check if request is from a business partner
      */
     public function isBusinessRequest(): bool
     {
@@ -380,7 +395,7 @@ class InspectionRequest extends Model
     }
 
     /**
-     * Check if request is from individual client
+     * Check if request is from an individual
      */
     public function isIndividualRequest(): bool
     {
@@ -400,13 +415,11 @@ class InspectionRequest extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->scheduled_date && 
-               $this->scheduled_date < Carbon::today() && 
-               in_array($this->status, ['assigned', 'in_progress']);
+        return $this->status !== 'completed' && $this->scheduled_date && $this->scheduled_date->isPast();
     }
 
     /**
-     * Check if request can be assigned
+     * Check if the request can be assigned
      */
     public function canBeAssigned(): bool
     {
@@ -414,7 +427,7 @@ class InspectionRequest extends Model
     }
 
     /**
-     * Check if request can be started
+     * Check if the request can be started by an inspector
      */
     public function canBeStarted(): bool
     {
@@ -422,7 +435,7 @@ class InspectionRequest extends Model
     }
 
     /**
-     * Check if request can be completed
+     * Check if the request can be completed
      */
     public function canBeCompleted(): bool
     {
@@ -430,25 +443,17 @@ class InspectionRequest extends Model
     }
 
     /**
-     * Assign inspector to request
+     * Assign inspector to the request
      */
     public function assignInspector(Inspector $inspector, User $assignedBy): void
     {
-        if (!$this->canBeAssigned()) {
-            throw new \Exception('Request cannot be assigned in current status: ' . $this->status);
-        }
-
         $this->update([
             'assigned_inspector_id' => $inspector->id,
             'assigned_by' => $assignedBy->id,
-            'assigned_at' => Carbon::now(),
-            'status' => 'assigned'
+            'assigned_at' => now(),
+            'status' => 'assigned',
         ]);
 
-        // Create status history
-        $this->recordStatusChange('pending', 'assigned', $assignedBy->id, 'Assigned to inspector: ' . $inspector->user->full_name);
-
-        // Update inspector status
         $inspector->setBusy();
     }
 
@@ -458,8 +463,8 @@ class InspectionRequest extends Model
     public function schedule(Carbon $date, Carbon $time): void
     {
         $this->update([
-            'scheduled_date' => $date->toDateString(),
-            'scheduled_time' => $time->toTimeString()
+            'scheduled_date' => $date,
+            'scheduled_time' => $time,
         ]);
     }
 
@@ -469,15 +474,18 @@ class InspectionRequest extends Model
     public function start(): void
     {
         if (!$this->canBeStarted()) {
-            throw new \Exception('Request cannot be started in current status: ' . $this->status);
+            // Or throw an exception
+            return;
         }
+
+        $oldStatus = $this->status;
 
         $this->update([
             'status' => 'in_progress',
-            'started_at' => Carbon::now()
+            'started_at' => now()
         ]);
 
-        $this->recordStatusChange('assigned', 'in_progress', $this->assigned_inspector_id, 'Inspection started');
+        $this->recordStatusChange($oldStatus, 'in_progress', $this->assigned_inspector_id, 'Inspection started');
     }
 
     /**
@@ -485,31 +493,27 @@ class InspectionRequest extends Model
      */
     public function complete(float $totalCost = null): void
     {
-        if (!$this->canBeCompleted()) {
-            throw new \Exception('Request cannot be completed in current status: ' . $this->status);
-        }
+        $oldStatus = $this->status;
 
-        $updateData = [
+        $this->update([
             'status' => 'completed',
-            'completed_at' => Carbon::now()
-        ];
+            'completed_at' => now(),
+            'total_cost' => $totalCost ?? $this->total_cost,
+            'payment_status' => $this->requester_type === 'business_partner' ? 'invoiced' : 'paid',
+        ]);
 
-        if ($totalCost !== null) {
-            $updateData['total_cost'] = $totalCost;
-        }
-
-        $this->update($updateData);
-
-        $this->recordStatusChange('in_progress', 'completed', $this->assigned_inspector_id, 'Inspection completed');
+        $this->recordStatusChange($oldStatus, 'completed', $this->assigned_inspector_id, 'Inspection completed');
 
         // Update property last inspection date
-        $this->property->update(['last_inspection_date' => Carbon::now()->toDateString()]);
+        if ($this->property) {
+            $this->property->update(['last_inspected_at' => now()]);
+        }
 
         // Update inspector stats
-        if ($this->assignedInspector) {
-            $this->assignedInspector->increment('total_inspections');
-            $this->assignedInspector->setAvailable();
-            $this->assignedInspector->updateRating();
+        if ($this->inspector) {
+            $this->inspector->increment('total_inspections');
+            $this->inspector->setAvailable();
+            $this->inspector->updateRating();
         }
     }
 
@@ -521,38 +525,35 @@ class InspectionRequest extends Model
         $oldStatus = $this->status;
         
         $this->update([
-            'status' => 'cancelled'
+            'status' => 'cancelled',
         ]);
 
-        $this->recordStatusChange($oldStatus, 'cancelled', $cancelledBy->id, $reason ?: 'Request cancelled');
+        $this->recordStatusChange($oldStatus, 'cancelled', $cancelledBy->id, $reason);
 
         // Free up inspector if assigned
-        if ($this->assignedInspector) {
-            $this->assignedInspector->setAvailable();
+        if ($this->inspector) {
+            $this->inspector->setAvailable();
         }
     }
 
     /**
-     * Calculate total cost including discounts
+     * Calculate the total cost of the inspection.
+     * This might involve summing up service costs from the package.
      */
     public function calculateTotalCost(): float
     {
-        $basePrice = $this->package->price;
-
-        // Apply business partner discount if applicable
-        if ($this->isBusinessRequest() && $this->businessPartner) {
-            $basePrice = $this->businessPartner->calculateDiscountedPrice($basePrice);
+        if ($this->package) {
+            return $this->package->base_price;
         }
-
-        return $basePrice;
+        return 0.0;
     }
 
     /**
-     * Get estimated duration
+     * Get total estimated duration in minutes
      */
     public function getEstimatedDuration(): int
     {
-        return $this->package->getTotalEstimatedDuration();
+        return $this->package ? $this->package->services->sum('estimated_duration_minutes') : 0;
     }
 
     /**
@@ -563,74 +564,59 @@ class InspectionRequest extends Model
         if (!$this->preferred_date) {
             return null;
         }
-
-        return Carbon::now()->diffInDays($this->preferred_date, false);
+        return now()->diffInDays($this->preferred_date, false);
     }
 
     /**
-     * Record status change in history
+     * Record a status change in the history table
      */
     private function recordStatusChange(?string $oldStatus, string $newStatus, int $changedBy, string $reason = null): void
     {
         $this->statusHistory()->create([
-            'old_status' => $oldStatus ?? 'new',
+            'old_status' => $oldStatus,
             'new_status' => $newStatus,
             'changed_by' => $changedBy,
-            'change_reason' => $reason
+            'notes' => $reason
         ]);
     }
 
     /**
-     * Get request statistics
+     * Get some basic statistics for this request.
      */
     public function getStatistics(): array
     {
-        $timeToCompletion = null;
-        $timeToAssignment = null;
-
-        if ($this->completed_at && $this->created_at) {
-            $timeToCompletion = $this->created_at->diffInHours($this->completed_at);
-        }
-
-        if ($this->assigned_at && $this->created_at) {
-            $timeToAssignment = $this->created_at->diffInHours($this->assigned_at);
-        }
+        $duration = $this->completed_at && $this->started_at
+            ? $this->completed_at->diffInMinutes($this->started_at)
+            : null;
 
         return [
-            'time_to_assignment_hours' => $timeToAssignment,
-            'time_to_completion_hours' => $timeToCompletion,
-            'is_overdue' => $this->isOverdue(),
-            'is_urgent' => $this->isUrgent(),
-            'is_business_request' => $this->isBusinessRequest(),
-            'estimated_duration_minutes' => $this->getEstimatedDuration(),
-            'days_until_preferred_date' => $this->getDaysUntilPreferredDate(),
-            'total_cost' => $this->calculateTotalCost(),
-            'payment_status' => $this->payment_status,
-            'status_changes_count' => $this->statusHistory()->count()
+            'status' => $this->getStatusDisplayName(),
+            'urgency' => $this->getUrgencyInfo()['label'],
+            'client' => $this->getClientAttribute()->name,
+            'property_address' => $this->property->full_address,
+            'inspector' => $this->inspector ? $this->inspector->user->full_name : 'N/A',
+            'duration' => $duration,
+            'cost' => $this->total_cost,
         ];
     }
 
     /**
-     * Auto-generate request number before creating
+     * Boot method for the model.
      */
     protected static function boot()
     {
         parent::boot();
 
-        static::creating(function ($request) {
-            if (!$request->request_number) {
-                $request->request_number = self::generateRequestNumber();
+        static::creating(function ($model) {
+            if (empty($model->request_number)) {
+                $model->request_number = self::generateRequestNumber();
             }
-
-            // Auto-calculate total cost if not set
-            if (!$request->total_cost) {
-                $request->total_cost = $request->calculateTotalCost();
+            if (empty($model->status)) {
+                $model->status = 'pending';
             }
-        });
-
-        static::created(function ($request) {
-            // Create initial status history
-            $request->recordStatusChange('new', 'pending', $request->requester_user_id, 'Request created');
+            if (empty($model->payment_status)) {
+                $model->payment_status = 'pending';
+            }
         });
     }
 }

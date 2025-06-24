@@ -19,7 +19,7 @@ class DashboardController extends Controller
         
         // Get user's inspection requests
         $inspectionRequests = $user->inspectionRequests()
-            ->with(['package', 'assignedInspector.user', 'property'])
+            ->with(['package', 'inspector.user', 'property', 'report'])
             ->orderBy('created_at', 'desc')
             ->get();
 

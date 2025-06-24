@@ -31,9 +31,9 @@ class InspectorDashboardController extends Controller
         $allAssignments = collect();
         if ($inspector) {
             $query = $inspector->inspectionRequests()
-                ->with(['requester', 'property', 'package'])
-                ->whereIn('status', ['assigned', 'in_progress'])
-                ->orderByDesc('assigned_at');
+                ->with(['requester', 'property', 'package', 'report'])
+                ->whereIn('status', ['assigned', 'in_progress', 'completed'])
+                ->orderByDesc('updated_at');
             if ($request->filled('search')) {
                 $search = $request->input('search');
                 $query->where(function($q) use ($search) {
@@ -62,35 +62,125 @@ class InspectorDashboardController extends Controller
         return view('inspectors.assignments', compact('inspector', 'allAssignments'));
     }
 
-    public function pending()
+    public function pending(Request $request)
     {
         $user = \Auth::user();
         $inspector = \App\Models\Inspector::where('user_id', $user->id)->first();
         $pendingRequests = collect();
         if ($inspector) {
-            $pendingRequests = $inspector->inspectionRequests()->where('status', 'assigned')->orderByDesc('assigned_at')->get();
+            $query = $inspector->inspectionRequests()
+                ->with(['requester', 'property', 'package', 'report'])
+                ->where('status', 'assigned')
+                ->orderByDesc('assigned_at');
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('request_number', 'like', "%$search%")
+                      ->orWhereHas('property', function($q2) use ($search) {
+                          $q2->where('address', 'like', "%$search%")
+                             ->orWhere('property_code', 'like', "%$search%")
+                             ->orWhere('property_type', 'like', "%$search%")
+                             ;
+                      })
+                      ->orWhereHas('package', function($q2) use ($search) {
+                          $q2->where('display_name', 'like', "%$search%")
+                             ->orWhere('name', 'like', "%$search%")
+                             ;
+                      });
+                });
+            }
+            if ($request->filled('urgency')) {
+                $query->where('urgency', $request->input('urgency'));
+            }
+            if ($request->filled('start_date')) {
+                $query->whereDate('scheduled_date', '>=', $request->input('start_date'));
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('scheduled_date', '<=', $request->input('end_date'));
+            }
+            $pendingRequests = $query->get();
         }
         return view('inspectors.pending', compact('inspector', 'pendingRequests'));
     }
 
-    public function inprogress()
+    public function inprogress(Request $request)
     {
         $user = \Auth::user();
         $inspector = \App\Models\Inspector::where('user_id', $user->id)->first();
         $inProgressRequests = collect();
         if ($inspector) {
-            $inProgressRequests = $inspector->inspectionRequests()->where('status', 'in_progress')->orderByDesc('started_at')->get();
+            $query = $inspector->inspectionRequests()
+                ->with(['requester', 'property', 'package', 'report'])
+                ->where('status', 'in_progress')
+                ->orderByDesc('started_at');
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('request_number', 'like', "%$search%")
+                      ->orWhereHas('property', function($q2) use ($search) {
+                          $q2->where('address', 'like', "%$search%")
+                             ->orWhere('property_code', 'like', "%$search%")
+                             ->orWhere('property_type', 'like', "%$search%")
+                             ;
+                      })
+                      ->orWhereHas('package', function($q2) use ($search) {
+                          $q2->where('display_name', 'like', "%$search%")
+                             ->orWhere('name', 'like', "%$search%")
+                             ;
+                      });
+                });
+            }
+            if ($request->filled('urgency')) {
+                $query->where('urgency', $request->input('urgency'));
+            }
+            if ($request->filled('start_date')) {
+                $query->whereDate('started_at', '>=', $request->input('start_date'));
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('started_at', '<=', $request->input('end_date'));
+            }
+            $inProgressRequests = $query->get();
         }
         return view('inspectors.inprogress', compact('inspector', 'inProgressRequests'));
     }
 
-    public function complete()
+    public function complete(Request $request)
     {
         $user = \Auth::user();
         $inspector = \App\Models\Inspector::where('user_id', $user->id)->first();
         $completedRequests = collect();
         if ($inspector) {
-            $completedRequests = $inspector->inspectionRequests()->where('status', 'completed')->orderByDesc('completed_at')->get();
+            $query = $inspector->inspectionRequests()
+                ->with(['requester', 'property', 'package', 'report'])
+                ->where('status', 'completed')
+                ->orderByDesc('completed_at');
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('request_number', 'like', "%$search%")
+                      ->orWhereHas('property', function($q2) use ($search) {
+                          $q2->where('address', 'like', "%$search%")
+                             ->orWhere('property_code', 'like', "%$search%")
+                             ->orWhere('property_type', 'like', "%$search%")
+                             ;
+                      })
+                      ->orWhereHas('package', function($q2) use ($search) {
+                          $q2->where('display_name', 'like', "%$search%")
+                             ->orWhere('name', 'like', "%$search%")
+                             ;
+                      });
+                });
+            }
+            if ($request->filled('urgency')) {
+                $query->where('urgency', $request->input('urgency'));
+            }
+            if ($request->filled('start_date')) {
+                $query->whereDate('completed_at', '>=', $request->input('start_date'));
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('completed_at', '<=', $request->input('end_date'));
+            }
+            $completedRequests = $query->get();
         }
         return view('inspectors.complete', compact('inspector', 'completedRequests'));
     }

@@ -13,13 +13,12 @@
     @stack('styles')
 </head>
 <body class="h-full">
-<div class="flex flex-col min-h-screen">
     @auth
         @php $user = Auth::user(); @endphp
-        
-        <div class="flex flex-1">
+    <div class="flex h-screen bg-gray-100">
             <!-- Sidebar -->
-            <aside class="w-64 bg-indigo-800 text-white flex-col py-6 px-4 hidden md:flex">
+        <aside class="w-64 bg-indigo-800 text-white flex-shrink-0 hidden md:flex flex-col">
+            <div class="flex-1 flex flex-col pt-6 px-4 overflow-y-auto">
                 @if($user->isInspector())
                     <div class="mb-8 text-xl font-bold tracking-wide">Inspector Portal</div>
                     <nav class="flex-1 space-y-2">
@@ -33,10 +32,20 @@
                     @include('layouts.partials.headtech-navigation')
                 @elseif($user->isAdmin())
                      @include('layouts.partials.admin-navigation')
+                @else
+                    <div class="mb-8 text-xl font-bold tracking-wide">Client Portal</div>
+                    <nav class="flex-1 space-y-2">
+                        <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('dashboard') ? 'bg-indigo-900' : '' }}">Dashboard</a>
+                        <a href="{{ route('my-requests') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('my-requests') ? 'bg-indigo-900' : '' }}">My Requests</a>
+                        <a href="{{ route('my-properties') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('my-properties') ? 'bg-indigo-900' : '' }}">My Properties</a>
+                        <a href="{{ route('profile') }}" class="block px-3 py-2 rounded hover:bg-indigo-700 {{ request()->routeIs('profile') ? 'bg-indigo-900' : '' }}">Profile</a>
+                    </nav>
                 @endif
+            </div>
             </aside>
             
-            <div class="flex-1 flex flex-col">
+        <!-- Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
                 <!-- Top bar -->
                 <header class="bg-white shadow-sm p-4 flex justify-between items-center">
                     <button class="md:hidden">
@@ -53,24 +62,29 @@
                 </header>
                 
                 <!-- Main content -->
-                <main class="flex-grow bg-gray-50 p-4 sm:p-6 lg:p-8">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
                     @yield('content')
                 </main>
+            
+            <footer class="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-500 flex-shrink-0">
+                &copy; {{ date('Y') }} Fundi Portal. All rights reserved.
+            </footer>
             </div>
         </div>
     @else
         <!-- Layout for guest users -->
+    <div class="flex flex-col min-h-screen">
         <main class="flex-grow">
             @yield('content')
         </main>
-    @endauth
-
     <footer class="bg-white border-t border-gray-200 mt-auto">
         <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
             &copy; {{ date('Y') }} Fundi Portal. All rights reserved.
         </div>
     </footer>
 </div>
+@endauth
+
 @stack('scripts')
 </body>
 </html>

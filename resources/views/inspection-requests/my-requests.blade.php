@@ -4,27 +4,11 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">My Inspection Requests</h1>
-        <p class="mt-2 text-gray-600">Track the status of your property inspection requests</p>
-    </div>
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">My Inspection Requests</h1>
 
-    <!-- Quick Actions -->
-    <div class="mb-6">
-        <a href="{{ route('inspection-requests.create') }}" 
-           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-            </svg>
-            New Request
-        </a>
-    </div>
-
-    <!-- Requests Table -->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        @if($requests->count() > 0)
-            <div class="overflow-x-auto">
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            @if($requests->count() > 0)
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -32,9 +16,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Package</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inspector</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -44,71 +26,54 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {{ $request->request_number }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <div>
-                                    <div class="font-medium">{{ $request->property->address ?? 'N/A' }}</div>
-                                    <div class="text-gray-500">{{ $request->property->district ?? '' }}</div>
-                                </div>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ $request->property->address ?? 'N/A' }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ $request->package->display_name ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     {{ $request->status === 'completed' ? 'bg-green-100 text-green-800' : 
                                        ($request->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                       ($request->status === 'cancelled' ? 'bg-red-100 text-red-800' : 
-                                       ($request->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'))) }}">
+                                       ($request->status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800')) }}">
                                     {{ ucfirst(str_replace('_', ' ', $request->status)) }}
                                 </span>
-                                @if($request->isUrgent())
-                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                        Urgent
-                                    </span>
-                                @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $request->assignedInspector->user->full_name ?? 'Not assigned' }}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ $request->created_at->format('M j, Y') }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <div>
-                                    <div>{{ $request->created_at->format('M j, Y') }}</div>
-                                    <div class="text-gray-500">{{ $request->created_at->format('g:i A') }}</div>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex items-center space-x-4">
+                                    <a href="{{ route('inspection-requests.show', $request->id) }}" class="text-gray-500 hover:text-blue-600" title="View Details">
+                                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                    </a>
+                                    @if($request->status === 'completed' && $request->report)
+                                        <a href="{{ route('inspection-requests.report.download', $request->id) }}" class="hover:text-blue-600" title="Download Report">
+                                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                            </svg>
+                                        </a>
+                                    @endif
                                 </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ number_format($request->total_cost, 0) }} RWF
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900">View Details</a>
-                                @if($request->status === 'pending')
-                                    <a href="#" class="ml-3 text-red-600 hover:text-red-900">Cancel</a>
-                                @endif
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
-            </div>
-            
-            <!-- Pagination -->
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $requests->links() }}
-            </div>
-        @else
-            <div class="text-center py-12">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">No inspection requests</h3>
-                <p class="mt-1 text-sm text-gray-500">Get started by creating your first inspection request.</p>
-                <div class="mt-6">
-                    <a href="{{ route('inspection-requests.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                        New Request
-                    </a>
+            @else
+                <div class="text-center py-8">
+                    <p class="text-gray-500">You have no inspection requests.</p>
+                    <a href="{{ route('inspection-requests.create') }}" class="mt-4 inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Make a Request</a>
                 </div>
-            </div>
-        @endif
+            @endif
+        </div>
+        <div class="p-4 bg-white border-t">
+            {{ $requests->links() }}
+        </div>
     </div>
 </div>
 @endsection 

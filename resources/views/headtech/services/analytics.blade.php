@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.headtech')
 
 @section('title', 'Service Analytics')
 
@@ -18,7 +18,7 @@
         </div>
     </div>
     <div class="mt-4 flex space-x-3 md:ml-4 md:mt-0">
-        <a href="{{ route('admin.services.index') }}" 
+        <a href="{{ route('headtech.services.index') }}" 
            class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
             <svg class="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
@@ -56,7 +56,7 @@
                     </button>
                 </div>
                 <div class="flex items-end">
-                    <a href="{{ route('admin.services.analytics') }}" 
+                    <a href="{{ route('headtech.services.analytics') }}" 
                        class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         Reset
                     </a>

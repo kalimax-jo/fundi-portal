@@ -28,9 +28,9 @@
                             @else bg-gray-100 text-gray-800 @endif">
                             {{ ucfirst($inspectionRequest->urgency ?? 'normal') }}
                         </span>
-                        @if($inspectionRequest->assignedInspector && $inspectionRequest->assignedInspector->user)
+                        @if($inspectionRequest->inspector && $inspectionRequest->inspector->user)
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
-                                Assigned to: {{ $inspectionRequest->assignedInspector->user->full_name }}
+                                Assigned to: {{ $inspectionRequest->inspector->user->full_name }}
                             </span>
                         @endif
                     </div>

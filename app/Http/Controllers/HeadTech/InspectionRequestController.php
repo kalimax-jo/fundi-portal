@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\InspectionRequest;
 use App\Models\Inspector;
+use App\Models\InspectionStatusHistory;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InspectionRequestController extends Controller
 {
@@ -15,7 +17,7 @@ class InspectionRequestController extends Controller
             'requester',
             'property',
             'package',
-            'assignedInspector.user',
+            'inspector.user',
             'businessPartner'
         ]);
 
@@ -129,7 +131,7 @@ class InspectionRequestController extends Controller
 
     public function show(InspectionRequest $inspectionRequest)
     {
-        $inspectionRequest->load(['property', 'package', 'assignedInspector.user']);
+        $inspectionRequest->load(['property', 'package', 'inspector.user']);
         return view('headtech.inspection-requests.show', compact('inspectionRequest'));
     }
 
@@ -214,6 +216,46 @@ class InspectionRequestController extends Controller
             }
             return redirect()->back()->with('error', 'Failed to assign inspector: ' . $e->getMessage())->withInput();
         }
+    }
+
+    public function reassignInspector(Request $request, InspectionRequest $inspectionRequest)
+    {
+        $request->validate([
+            'assigned_inspector_id' => 'required|exists:inspectors,id',
+        ]);
+
+        $originalInspectorId = $inspectionRequest->assigned_inspector_id;
+        $newInspectorId = $request->input('assigned_inspector_id');
+
+        // Update the inspector
+        $inspectionRequest->assigned_inspector_id = $newInspectorId;
+        $inspectionRequest->save();
+
+        // Log the change
+        InspectionStatusHistory::create([
+            'inspection_request_id' => $inspectionRequest->id,
+            'old_status' => $inspectionRequest->status,
+            'new_status' => $inspectionRequest->status,
+            'changed_by' => auth()->id(),
+            'change_reason' => "Inspector reassigned from Inspector ID: {$originalInspectorId} to ID: {$newInspectorId}.",
+        ]);
+
+        return redirect()->route('headtech.assignments.index')->with('success', 'Inspector has been successfully reassigned.');
+    }
+
+    public function downloadReport(InspectionRequest $inspectionRequest)
+    {
+        $report = $inspectionRequest->report()->with('inspectionRequest.property', 'inspectionRequest.requester', 'inspectionRequest.package.services')->firstOrFail();
+
+        if ($report->status !== 'completed') {
+            return redirect()->back()->with('error', 'Only completed reports can be downloaded.');
+        }
+        
+        $services = $report->inspectionRequest->package->services;
+
+        $pdf = Pdf::loadView('inspectors.reports.pdf', compact('report', 'services'));
+        
+        return $pdf->download('inspection-report-'.$report->inspectionRequest->request_number.'.pdf');
     }
 
     public function assign(Request $request)

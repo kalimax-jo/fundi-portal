@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InspectionRequestController extends Controller
 {
@@ -249,8 +251,9 @@ class InspectionRequestController extends Controller
     public function myRequests()
     {
         $user = auth()->user();
+        
         $requests = $user->inspectionRequests()
-            ->with(['package', 'assignedInspector.user', 'property'])
+            ->with(['package', 'property', 'report'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -263,11 +266,11 @@ class InspectionRequestController extends Controller
     public function myProperties()
     {
         $user = auth()->user();
+
+        // A user's properties can be linked by email or phone.
         $properties = Property::where('owner_email', $user->email)
             ->orWhere('owner_phone', $user->phone)
-            ->with(['inspectionRequests' => function($query) use ($user) {
-                $query->where('requester_user_id', $user->id);
-            }])
+            ->withCount('inspectionRequests')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -289,20 +292,46 @@ class InspectionRequestController extends Controller
     public function updateProfile(Request $request)
     {
         $user = auth()->user();
-        
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
-            'email' => 'required|email|unique:users,email,' . $user->id,
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
         ]);
+        $user->update($request->only('first_name', 'last_name', 'email', 'phone'));
+        return redirect()->route('profile')->with('success', 'Profile updated successfully.');
+    }
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+    public function show(InspectionRequest $inspectionRequest)
+    {
+        // Ensure the request belongs to the authenticated user or an admin
+        if ($inspectionRequest->requester_user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+            abort(403, 'Unauthorized action.');
         }
 
-        $user->update($request->only(['first_name', 'last_name', 'phone', 'email']));
+        $inspectionRequest->load(['package', 'property', 'inspector.user', 'report']);
 
-        return redirect()->route('profile')->with('success', 'Profile updated successfully.');
+        return view('inspection-requests.show', compact('inspectionRequest'));
+    }
+
+    public function downloadReport(InspectionRequest $inspectionRequest)
+    {
+        // Ensure the request belongs to the authenticated user
+        if ($inspectionRequest->requester_user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        $report = $inspectionRequest->report()->firstOrFail();
+
+        if ($report->status !== 'completed') {
+            return redirect()->back()->with('error', 'Only completed reports can be downloaded.');
+        }
+        
+        $services = $report->inspectionRequest->package->services;
+
+        // We can reuse the same PDF view from the inspector's section
+        $pdf = Pdf::loadView('inspectors.reports.pdf', compact('report', 'services'));
+        
+        return $pdf->download('inspection-report-'.$report->inspectionRequest->request_number.'.pdf');
     }
 }

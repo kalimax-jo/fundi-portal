@@ -120,15 +120,26 @@
                                 </div>
                                 <div class="text-sm text-gray-700 mt-1">{{ $request->requester->full_name ?? '' }}</div>
                                 <div class="text-xs text-gray-500">{{ $request->property->address ?? '' }} &bull; {{ $request->package->display_name ?? '' }}</div>
-                                @if($request->status === 'assigned' && $request->assignedInspector && $request->assignedInspector->user)
-                                    <div class="text-xs text-blue-700 mt-1 font-semibold">Assigned to: {{ $request->assignedInspector->user->full_name }}</div>
+                                @if($request->status === 'assigned' && $request->inspector && $request->inspector->user)
+                                    <div class="text-xs text-blue-700 mt-1 font-semibold">Assigned to: {{ $request->inspector->user->full_name }}</div>
                                 @endif
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 mt-4 md:mt-0">
-                            <a href="{{ route('headtech.inspection-requests.show', $request->id) }}" class="text-blue-600 hover:underline text-sm">View</a>
+                        <div class="flex items-center gap-4 mt-4 md:mt-0">
+                            <a href="{{ route('headtech.inspection-requests.show', $request->id) }}" class="text-green-500 hover:text-green-700" title="View Details">
+                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </a>
                             
-                            @if($request->status === 'pending')
+                            @if($request->status === 'completed' && $request->report)
+                                <a href="{{ route('headtech.inspection-requests.report.download', $request->id) }}" class="text-gray-500 hover:text-blue-600" title="Download Report">
+                                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                </a>
+                            @elseif($request->status === 'pending')
                                 <form action="{{ route('headtech.inspection-requests.assign', $request->id) }}" method="POST" class="flex items-center gap-2 ml-2">
                                     @csrf
                                     <select name="inspector_id" required class="rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 text-sm">

@@ -39,7 +39,12 @@ class BusinessPartner extends Model
         'billing_cycle',
         'discount_percentage',
         'credit_limit',
-        'notes'
+        'notes',
+        'deployment_type',
+        'sync_url',
+        'api_key',
+        'sync_type',
+        'failover_active'
     ];
 
     /**
