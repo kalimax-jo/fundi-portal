@@ -27,22 +27,39 @@ class LoginController extends Controller
         ]);
 
         $remember = $request->boolean('remember');
+        $host = $request->getHost();
+        $subdomain = explode('.', $host)[0];
+        $mainDomains = ['localhost', '127.0.0.1', 'www', 'admin'];
 
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-
-            $user = $request->user();
-            if ($user->isHeadTechnician()) {
-                return redirect()->route('headtech.dashboard');
+        if (!in_array($subdomain, $mainDomains)) {
+            // Business partner login
+            if (Auth::guard('partner')->attempt($credentials, $remember)) {
+                \Log::info('Business partner login successful', ['user_id' => Auth::guard('partner')->id(), 'email' => $request->email]);
+                $request->session()->regenerate();
+                return redirect()->route('partner.dashboard');
             }
-            if ($user->isAdmin()) {
-                return redirect()->route('admin.dashboard');
+        } else {
+            // Main app login
+            if (Auth::attempt($credentials, $remember)) {
+                $request->session()->regenerate();
+                $user = $request->user();
+                if ($user->isHeadTechnician()) {
+                    return redirect()->route('headtech.dashboard');
+                }
+                if ($user->isAdmin()) {
+                    return redirect()->route('admin.dashboard');
+                }
+                if ($user->isInspector()) {
+                    return redirect()->route('inspector.dashboard');
+                }
+                // Institutional Partner User: always redirect to correct dashboard with subdomain
+                $mainDomain = 'fundi.info';
+                if ($user->isInstitutionalUser() && $host !== $mainDomain && str_ends_with($host, '.' . $mainDomain)) {
+                    return redirect()->route('institutional-partner.dashboard', ['subdomain' => $subdomain]);
+                }
+                // Fallback for all other users
+                return redirect('/');
             }
-            if ($user->isInspector()) {
-                return redirect()->route('inspector.dashboard');
-            }
-            // Add more role checks as needed
-            return redirect()->intended(route('dashboard'));
         }
 
         return back()->withErrors([
@@ -55,11 +72,22 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
-        Auth::logout();
+        $host = $request->getHost();
+        $subdomain = explode('.', $host)[0];
+        $mainDomains = ['localhost', '127.0.0.1', 'www', 'admin'];
+
+        if (!in_array($subdomain, $mainDomains)) {
+            Auth::guard('partner')->logout();
+        } else {
+            Auth::logout();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        if (!in_array($subdomain, $mainDomains)) {
+            return redirect()->route('partner.login');
+        }
         return redirect('/');
     }
 }

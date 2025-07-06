@@ -17,12 +17,15 @@ return new class extends Migration
             $table->string('phone', 20)->nullable()->after('email');
             $table->string('website')->nullable()->after('phone');
             $table->string('city', 100)->nullable()->after('address');
-            $table->string('country', 100)->default('Rwanda')->after('city');
+            $table->string('country', 100)->nullable()->after('city');
             $table->enum('tier', ['bronze', 'silver', 'gold', 'platinum'])->default('bronze')->after('type');
             $table->enum('billing_cycle', ['monthly', 'quarterly', 'annually'])->default('monthly')->after('billing_type');
             $table->decimal('credit_limit', 15, 2)->nullable()->after('discount_percentage');
             $table->date('contract_end_date')->nullable()->after('partnership_start_date');
             $table->text('notes')->nullable()->after('discount_percentage');
+            
+            // Add subdomain field for multi-tenancy
+            $table->string('subdomain', 100)->unique()->nullable()->after('name');
 
             // Update existing columns to match controller expectations
             $table->text('address')->nullable()->change();
@@ -42,9 +45,8 @@ return new class extends Migration
     {
         Schema::table('business_partners', function (Blueprint $table) {
             $table->dropColumn([
-                'email', 'phone', 'website', 'city', 'country', 
-                'tier', 'billing_cycle', 'credit_limit', 
-                'contract_end_date', 'notes'
+                'email', 'phone', 'website', 'city', 'country', 'tier', 
+                'billing_cycle', 'credit_limit', 'contract_end_date', 'notes', 'subdomain'
             ]);
         });
 

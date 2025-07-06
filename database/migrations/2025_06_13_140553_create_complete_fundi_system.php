@@ -175,7 +175,7 @@ return new class extends Migration
         // 11. Inspection requests table
         Schema::create('inspection_requests', function (Blueprint $table) {
             $table->id();
-            $table->string('request_number', 20)->unique();
+            $table->string('request_number', 32)->unique();
             $table->enum('requester_type', ['individual', 'business_partner']);
             $table->foreignId('requester_user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('business_partner_id')->nullable()->constrained()->onDelete('set null');

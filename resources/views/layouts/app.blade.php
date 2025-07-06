@@ -7,16 +7,15 @@
 
     <title>@yield('title', 'Fundi Portal')</title>
 
-    <!-- Vite/Tailwind CSS -->
     @vite('resources/css/app.css')
 
     @stack('styles')
 </head>
 <body class="h-full">
-    @auth
-        @php $user = Auth::user(); @endphp
+@auth
+    @php $user = Auth::user(); @endphp
     <div class="flex h-screen bg-gray-100">
-            <!-- Sidebar -->
+        <!-- Sidebar -->
         <aside class="w-64 bg-indigo-800 text-white flex-shrink-0 hidden md:flex flex-col">
             <div class="flex-1 flex flex-col pt-6 px-4 overflow-y-auto">
                 @if($user->isInspector())
@@ -42,47 +41,47 @@
                     </nav>
                 @endif
             </div>
-            </aside>
-            
+        </aside>
+
         <!-- Content Area -->
         <div class="flex-1 flex flex-col overflow-hidden">
-                <!-- Top bar -->
-                <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-                    <button class="md:hidden">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                    </button>
-                    <div class="flex-1">@yield('page-header')</div>
-                    <div>
-                        <span class="font-semibold">{{ $user->full_name }}</span>
-                        <form method="POST" action="{{ route('logout') }}" class="inline ml-4">
-                            @csrf
-                            <button type="submit" class="text-sm text-gray-600 hover:underline">Logout</button>
-                        </form>
-                    </div>
-                </header>
-                
-                <!-- Main content -->
+            <!-- Top bar -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                <button class="md:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+                <div class="flex-1">@yield('page-header')</div>
+                <div>
+                    <span class="font-semibold">{{ $user->full_name }}</span>
+                    <form method="POST" action="{{ route('logout') }}" class="inline ml-4">
+                        @csrf
+                        <button type="submit" class="text-sm text-gray-600 hover:underline">Logout</button>
+                    </form>
+                </div>
+            </header>
+
+            <!-- Main content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
-                    @yield('content')
-                </main>
+                @yield('content')
+            </main>
             
             <footer class="bg-white border-t border-gray-200 py-4 text-center text-sm text-gray-500 flex-shrink-0">
                 &copy; {{ date('Y') }} Fundi Portal. All rights reserved.
             </footer>
-            </div>
         </div>
-    @else
-        <!-- Layout for guest users -->
+    </div>
+@else
+    <!-- Layout for guest users -->
     <div class="flex flex-col min-h-screen">
         <main class="flex-grow">
             @yield('content')
         </main>
-    <footer class="bg-white border-t border-gray-200 mt-auto">
-        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-            &copy; {{ date('Y') }} Fundi Portal. All rights reserved.
-        </div>
-    </footer>
-</div>
+        <footer class="bg-white border-t border-gray-200 mt-auto">
+            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+                &copy; {{ date('Y') }} Fundi Portal. All rights reserved.
+            </div>
+        </footer>
+    </div>
 @endauth
 
 @stack('scripts')

@@ -104,11 +104,11 @@ class AdminDashboardController extends Controller
                 'pending_payments' => $this->safeSum(Payment::class, 'amount', ['status' => 'pending']),
                 'revenue_this_month' => $this->safeSum(Payment::class, 'amount', [], function($query) {
                     return $query->where('status', 'completed')
-                        ->whereMonth('created_at', Carbon::now()->month);
+                        ->whereMonth('initiated_at', Carbon::now()->month);
                 }),
                 'revenue_last_month' => $this->safeSum(Payment::class, 'amount', [], function($query) {
                     return $query->where('status', 'completed')
-                        ->whereMonth('created_at', Carbon::now()->subMonth()->month);
+                        ->whereMonth('initiated_at', Carbon::now()->subMonth()->month);
                 }),
                 'avg_payment_amount' => $this->safeAvg(Payment::class, 'amount', ['status' => 'completed']),
                 'payment_methods' => $this->safeGroupCount(Payment::class, 'payment_method', ['status' => 'completed']),
@@ -139,10 +139,13 @@ class AdminDashboardController extends Controller
     {
         return [
             'recent_users' => User::with('roles')->latest()->take(10)->get(),
-            'recent_inspection_requests' => collect([]), // Empty for now
-            'recent_payments' => collect([]), // Empty for now
-            'recent_inspectors' => collect([]), // Empty for now
-            'recent_business_partners' => collect([]), // Empty for now
+            'recent_inspection_requests' => InspectionRequest::with(['property', 'businessPartner', 'inspector.user'])
+                ->latest()->take(10)->get(),
+            'recent_payments' => Payment::with(['inspectionRequest'])->orderBy('initiated_at', 'desc')->take(10)->get(),
+            'recent_inspectors' => Inspector::with('user')->latest()->take(10)->get(),
+            'recent_business_partners' => BusinessPartner::with(['users', 'inspectionRequests'])
+                ->latest()->take(10)->get(),
+            'recent_properties' => Property::latest()->take(10)->get(),
         ];
     }
 

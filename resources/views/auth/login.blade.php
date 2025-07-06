@@ -10,10 +10,14 @@
                 Sign in to your account
             </h2>
             <p class="mt-2 text-center text-sm text-gray-600">
-                Fundi Portal Admin Access
+                @if(session('current_business_partner'))
+                    {{ session('current_business_partner')->name }} Portal
+                @else
+                    Fundi Portal Admin Access
+                @endif
             </p>
         </div>
-        <form class="mt-8 space-y-6" action="{{ route('login') }}" method="POST">
+        <form class="mt-8 space-y-6" action="{{ session('current_business_partner') ? route('partner.login.post') : (\Route::has('admin.login') ? route('admin.login') : '/login') }}" method="POST">
             @csrf
             <div class="rounded-md shadow-sm -space-y-px">
                 <div>

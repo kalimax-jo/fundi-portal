@@ -73,11 +73,37 @@
         </div>
     </div>
 
+    {{-- Recent Activity Section --}}
+    @if(isset($recentActivity) && $recentActivity->count() > 0)
+    <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+            <div class="space-y-3 max-h-96 overflow-y-auto">
+                @foreach($recentActivity as $activity)
+                    <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex-shrink-0 text-xl">
+                            {{ $activity->getActivityIcon() }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm {{ $activity->getActivityColorClass() }} font-medium">
+                                {{ $activity->getActivityDescription() }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ $activity->getTimeElapsed() }}
+                            </p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Activity Table --}}
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
             <div class="px-4 py-5 sm:p-6">
-                @if (session('success'))
+                @if(session('success'))
                     <div class="rounded-md bg-green-50 p-4 mb-4">
                         <div class="flex">
                             <div class="flex-shrink-0">
@@ -87,6 +113,38 @@
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="rounded-md bg-red-50 p-4 mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                @if($errors->any())
+                    <div class="rounded-md bg-red-50 p-4 mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <ul class="text-sm text-red-800 list-disc pl-5">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -149,38 +207,54 @@
                                             <span class="text-sm text-gray-500 italic">Not Assigned</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div x-data="{ open: false }" class="relative inline-block text-left">
-        <div>
-                                                <button @click="open = !open" type="button" class="inline-flex items-center justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="menu-button" aria-expanded="true" aria-haspopup="true">
-                                                    Actions
-                                                    <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                                    </svg>
-                                                </button>
-                            </div>
-                                            <div x-show="open" @click.away="open = false" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-                                                <div class="py-1" role="none">
-                                                    <a href="{{ route('headtech.inspection-requests.show', $request->id) }}" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem" tabindex="-1">View Details</a>
-                                                    @if($request->status === 'pending')
-                                                        <a href="{{ route('headtech.inspection-requests.assign-page', ['request_id' => $request->id]) }}" class="text-gray-700 block px-4 py-2 text-sm" role="menuitem" tabindex="-1">Assign Inspector</a>
-                                                    @elseif(in_array($request->status, ['assigned', 'in_progress']))
-                                                        <form action="{{ route('headtech.inspection-requests.reassign', $request->id) }}" method="POST" class="px-4 py-2">
-                                                            @csrf
-                                                            <label for="assigned_inspector_id_{{ $request->id }}" class="block text-xs font-medium text-gray-700">Change Inspector:</label>
-                                                            <select name="assigned_inspector_id" id="assigned_inspector_id_{{ $request->id }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                                                @foreach ($allInspectors as $inspector)
-                                                                    <option value="{{ $inspector->id }}" {{ $request->assigned_inspector_id == $inspector->id ? 'selected' : '' }}>
-                                                                        {{ $inspector->user->full_name }}
-                                                                    </option>
-                    @endforeach
-                                                            </select>
-                                                            <button type="submit" class="mt-2 w-full bg-indigo-600 text-white px-2 py-1 rounded text-xs hover:bg-indigo-700">Re-assign</button>
-                                                        </form>
-            @endif
-        </div>
-    </div>
-            </div>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex flex-col gap-2 items-end">
+                                        <a href="{{ route('headtech.inspection-requests.show', $request->id) }}" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 text-sm font-medium">View Details</a>
+                                        @if($request->status === 'pending')
+                                            <button type="button" onclick="openAssignModal({{ $request->id }})" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm font-medium">Assign Inspector</button>
+                                        @elseif(in_array($request->status, ['assigned', 'in_progress']))
+                                            <button type="button" onclick="openAssignModal({{ $request->id }})" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">Re-Assign Inspector</button>
+                                        @endif
+                                        <!-- Assign Inspector Modal -->
+                                        <div id="assign-modal-{{ $request->id }}" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeAssignModal({{ $request->id }})"></div>
+                                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                                                <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                                                    <div class="sm:flex sm:items-start">
+                                                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                                                            <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                        </div>
+                                                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">{{ in_array($request->status, ['assigned', 'in_progress']) ? 'Re-Assign Inspector' : 'Assign Inspector' }}</h3>
+                                                            <div class="mt-2">
+                                                                <form action="{{ route('headtech.inspection-requests.' . (in_array($request->status, ['assigned', 'in_progress']) ? 'reassign' : 'assign'), $request->id) }}" method="POST" class="space-y-3">
+                                                                    @csrf
+                                                                    <label for="inspector_id_modal_{{ $request->id }}" class="block text-xs font-medium text-gray-700">Inspector</label>
+                                                                    <select name="inspector_id" id="inspector_id_modal_{{ $request->id }}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" @if($allInspectors->count() == 0) disabled @endif required>
+                                                                        @if($allInspectors->count() == 0)
+                                                                            <option>No inspectors available</option>
+                                                                        @else
+                                                                            <option value="">-- Select Inspector --</option>
+                                                                            @foreach ($allInspectors as $inspector)
+                                                                                <option value="{{ $inspector->id }}">{{ $inspector->user->full_name }}</option>
+                                                                            @endforeach
+                                                                        @endif
+                                                                    </select>
+                                                                    <label for="scheduled_date_modal_{{ $request->id }}" class="block text-xs font-medium text-gray-700">Scheduled Date</label>
+                                                                    <input type="date" name="scheduled_date" id="scheduled_date_modal_{{ $request->id }}" class="mt-1 block w-full border-gray-300 rounded-md" required>
+                                                                    <label for="scheduled_time_modal_{{ $request->id }}" class="block text-xs font-medium text-gray-700">Scheduled Time</label>
+                                                                    <input type="time" name="scheduled_time" id="scheduled_time_modal_{{ $request->id }}" class="mt-1 block w-full border-gray-300 rounded-md" required>
+                                                                    <div class="mt-4 flex justify-end">
+                                                                        <button type="button" onclick="closeAssignModal({{ $request->id }})" class="mr-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Cancel</button>
+                                                                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50" @if($allInspectors->count() == 0) disabled @endif>{{ in_array($request->status, ['assigned', 'in_progress']) ? 'Re-Assign' : 'Assign' }}</button>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                         @endforeach
@@ -200,4 +274,54 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection
+
+@push('scripts')
+<script>
+// Prevent any potential refresh loops
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Assignments page loaded successfully');
+    
+    // Prevent form resubmission on refresh
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        const dropdowns = document.querySelectorAll('[id^="dropdown-"]');
+        dropdowns.forEach(function(dropdown) {
+            if (!dropdown.contains(event.target) && !event.target.closest('button[onclick*="toggleDropdown"]')) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    });
+});
+
+// Function to toggle dropdown
+function toggleDropdown(requestId) {
+    const dropdown = document.getElementById('dropdown-' + requestId);
+    const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
+    
+    // Close all other dropdowns
+    allDropdowns.forEach(function(d) {
+        if (d.id !== 'dropdown-' + requestId) {
+            d.classList.add('hidden');
+        }
+    });
+    
+    // Toggle current dropdown
+    dropdown.classList.toggle('hidden');
+}
+
+function openAssignModal(requestId) {
+    document.getElementById('assign-modal-' + requestId).classList.remove('hidden');
+    // Also close dropdown if open
+    const dropdown = document.getElementById('dropdown-' + requestId);
+    if (dropdown) dropdown.classList.add('hidden');
+}
+function closeAssignModal(requestId) {
+    document.getElementById('assign-modal-' + requestId).classList.add('hidden');
+}
+</script>
+@endpush 

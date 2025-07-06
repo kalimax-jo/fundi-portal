@@ -204,6 +204,17 @@
                             {{ $businessPartner->city }}, {{ $businessPartner->country }}
                         </dd>
                     </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Subdomain</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {{ $businessPartner->subdomain }}
+                            @if($businessPartner->subdomain)
+                                <span class="ml-2">
+                                    <a href="http://{{ $businessPartner->subdomain }}.localhost:8000" target="_blank" class="text-indigo-600 hover:text-indigo-500 underline">Visit Portal</a>
+                                </span>
+                            @endif
+                        </dd>
+                    </div>
                 </dl>
             </div>
         </div>

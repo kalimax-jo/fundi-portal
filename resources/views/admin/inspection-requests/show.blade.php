@@ -423,7 +423,7 @@
                 <div class="mb-4">
                     <label for="scheduled_date" class="block text-sm font-medium text-gray-700">Scheduled Date</label>
                     <input type="date" name="scheduled_date" id="scheduled_date" required
-                           min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}"
+                           min="{{ date('Y-m-d') }}"
                            value="{{ $inspectionRequest->preferred_date }}"
                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 </div>

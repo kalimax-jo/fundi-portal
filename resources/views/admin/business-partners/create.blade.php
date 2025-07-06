@@ -46,13 +46,35 @@
                 </div>
                 <div class="mt-5 md:col-span-2 md:mt-0">
                     <div class="grid grid-cols-6 gap-6">
-                        <!-- Company Name -->
+                        <!-- Business Partner Name -->
                         <div class="col-span-6">
-                            <label for="name" class="block text-sm font-medium text-gray-700">Company Name *</label>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Business Partner Name *</label>
                             <input type="text" name="name" id="name" required
                                    class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                                   value="{{ old('name') }}">
+                                   value="{{ old('name') }}"
+                                   oninput="generateSubdomainSuggestion()">
                             @error('name')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Subdomain -->
+                        <div class="col-span-6">
+                            <label for="subdomain" class="block text-sm font-medium text-gray-700">Subdomain</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <input type="text" name="subdomain" id="subdomain"
+                                       class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-l-md"
+                                       placeholder="partner-name"
+                                       value="{{ old('subdomain') }}"
+                                       oninput="generateSubdomainSuggestion()">
+                                <span class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                    .fundi.info
+                                </span>
+                            </div>
+                            <p class="mt-1 text-sm text-gray-500">Leave empty to auto-generate from business name</p>
+                            <div id="subdomain-suggestion" class="mt-1 text-sm text-blue-600 hidden"></div>
+                            <div id="subdomain-status" class="mt-1 text-sm hidden"></div>
+                            @error('subdomain')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -210,108 +232,6 @@
                                    class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                                    value="{{ old('contact_phone') }}">
                             @error('contact_phone')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Partnership Details -->
-        <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-            <div class="md:grid md:grid-cols-3 md:gap-6">
-                <div class="md:col-span-1">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">Partnership Details</h3>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Terms and conditions of the partnership agreement.
-                    </p>
-                </div>
-                <div class="mt-5 md:col-span-2 md:mt-0">
-                    <div class="grid grid-cols-6 gap-6">
-                        <!-- Tier -->
-                        <div class="col-span-6 sm:col-span-3">
-                            <label for="tier" class="block text-sm font-medium text-gray-700">Partnership Tier *</label>
-                            <select name="tier" id="tier" required
-                                    class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="">Select Tier</option>
-                                @foreach($tiers as $value => $label)
-                                    <option value="{{ $value }}" {{ old('tier') == $value ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('tier')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Discount Percentage -->
-                        <div class="col-span-6 sm:col-span-3">
-                            <label for="discount_percentage" class="block text-sm font-medium text-gray-700">Discount Percentage (%)</label>
-                            <input type="number" name="discount_percentage" id="discount_percentage" min="0" max="50" step="0.01"
-                                   class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                                   value="{{ old('discount_percentage', '0') }}">
-                            @error('discount_percentage')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Billing Cycle -->
-                        <div class="col-span-6 sm:col-span-3">
-                            <label for="billing_cycle" class="block text-sm font-medium text-gray-700">Billing Cycle *</label>
-                            <select name="billing_cycle" id="billing_cycle" required
-                                    class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="">Select Billing Cycle</option>
-                                <option value="monthly" {{ old('billing_cycle') == 'monthly' ? 'selected' : '' }}>Monthly</option>
-                                <option value="quarterly" {{ old('billing_cycle') == 'quarterly' ? 'selected' : '' }}>Quarterly</option>
-                                <option value="annually" {{ old('billing_cycle') == 'annually' ? 'selected' : '' }}>Annually</option>
-                            </select>
-                            @error('billing_cycle')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Credit Limit -->
-                        <div class="col-span-6 sm:col-span-3">
-                            <label for="credit_limit" class="block text-sm font-medium text-gray-700">Credit Limit (RWF)</label>
-                            <input type="number" name="credit_limit" id="credit_limit" min="0" step="0.01"
-                                   class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                                   value="{{ old('credit_limit') }}">
-                            @error('credit_limit')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Partnership Start Date -->
-                        <div class="col-span-6 sm:col-span-3">
-                            <label for="partnership_start_date" class="block text-sm font-medium text-gray-700">Partnership Start Date *</label>
-                            <input type="date" name="partnership_start_date" id="partnership_start_date" required
-                                   class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                                   value="{{ old('partnership_start_date', date('Y-m-d')) }}">
-                            @error('partnership_start_date')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Contract End Date -->
-                        <div class="col-span-6 sm:col-span-3">
-                            <label for="contract_end_date" class="block text-sm font-medium text-gray-700">Contract End Date</label>
-                            <input type="date" name="contract_end_date" id="contract_end_date"
-                                   class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                                   value="{{ old('contract_end_date') }}">
-                            @error('contract_end_date')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Notes -->
-                        <div class="col-span-6">
-                            <label for="notes" class="block text-sm font-medium text-gray-700">Partnership Notes</label>
-                            <textarea name="notes" id="notes" rows="3"
-                                      class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                                      placeholder="Any additional notes about this partnership...">{{ old('notes') }}</textarea>
-                            @error('notes')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -480,6 +400,91 @@ label {
 
 @push('scripts')
 <script>
+// Subdomain generation and validation
+function generateSubdomainSuggestion() {
+    const nameField = document.getElementById('name');
+    const subdomainField = document.getElementById('subdomain');
+    const suggestionDiv = document.getElementById('subdomain-suggestion');
+    const statusDiv = document.getElementById('subdomain-status');
+    
+    // If subdomain field is empty, generate suggestion from name
+    if (!subdomainField.value && nameField.value) {
+        const suggestedSubdomain = nameField.value
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '')
+            .substring(0, 20);
+        
+        // Make the suggestion clickable
+        suggestionDiv.innerHTML = `Suggested subdomain: <span class="cursor-pointer underline hover:text-blue-800" onclick="useSuggestedSubdomain('${suggestedSubdomain}')">${suggestedSubdomain}.fundi.info</span>`;
+        suggestionDiv.classList.remove('hidden');
+        suggestionDiv.classList.add('text-blue-600');
+    } else if (subdomainField.value) {
+        // Check if subdomain is valid
+        const subdomain = subdomainField.value;
+        const isValid = /^[a-z0-9-]+$/.test(subdomain);
+        
+        if (!isValid) {
+            statusDiv.textContent = 'Subdomain can only contain lowercase letters, numbers, and hyphens';
+            statusDiv.classList.remove('hidden', 'text-green-600');
+            statusDiv.classList.add('text-red-600');
+        } else {
+            // Check availability via AJAX
+            checkSubdomainAvailability(subdomain);
+        }
+    } else {
+        suggestionDiv.classList.add('hidden');
+        statusDiv.classList.add('hidden');
+    }
+}
+
+// Function to use the suggested subdomain
+function useSuggestedSubdomain(subdomain) {
+    const subdomainField = document.getElementById('subdomain');
+    subdomainField.value = subdomain;
+    
+    // Trigger the availability check
+    checkSubdomainAvailability(subdomain);
+    
+    // Hide the suggestion since we're now using it
+    const suggestionDiv = document.getElementById('subdomain-suggestion');
+    suggestionDiv.classList.add('hidden');
+}
+
+function checkSubdomainAvailability(subdomain) {
+    const statusDiv = document.getElementById('subdomain-status');
+    
+    // Show loading state
+    statusDiv.textContent = 'Checking availability...';
+    statusDiv.classList.remove('hidden', 'text-red-600', 'text-green-600');
+    statusDiv.classList.add('text-yellow-600');
+    
+    // Make AJAX request to check availability
+    fetch(`/admin/business-partners/check-subdomain?subdomain=${subdomain}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.available) {
+            statusDiv.textContent = '✓ Subdomain is available';
+            statusDiv.classList.remove('hidden', 'text-red-600', 'text-yellow-600');
+            statusDiv.classList.add('text-green-600');
+        } else {
+            statusDiv.textContent = '✗ Subdomain is already taken';
+            statusDiv.classList.remove('hidden', 'text-green-600', 'text-yellow-600');
+            statusDiv.classList.add('text-red-600');
+        }
+    })
+    .catch(error => {
+        statusDiv.textContent = 'Error checking availability';
+        statusDiv.classList.remove('hidden', 'text-green-600', 'text-yellow-600');
+        statusDiv.classList.add('text-red-600');
+    });
+}
+
 // Auto-fill contact email with primary contact email when it changes
 document.getElementById('primary_contact_email').addEventListener('input', function(e) {
     const contactEmailField = document.getElementById('contact_email');
@@ -509,6 +514,9 @@ document.getElementById('primary_contact_phone').addEventListener('input', funct
         contactPhoneField.value = e.target.value;
     }
 });
+
+// Trigger subdomain suggestion when name field changes
+document.getElementById('name').addEventListener('input', generateSubdomainSuggestion);
 </script>
 @endpush
 

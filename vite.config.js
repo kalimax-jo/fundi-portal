@@ -8,4 +8,11 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: '0.0.0.0', // Listen on all network interfaces
+        hmr: {
+            host: 'localhost'
+        },
+        cors: true // Allow all origins
+    }
 });

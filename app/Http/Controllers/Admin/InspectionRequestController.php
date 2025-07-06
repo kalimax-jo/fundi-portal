@@ -417,9 +417,16 @@ class InspectionRequestController extends Controller
      */
     public function assignInspector(Request $request, InspectionRequest $inspectionRequest)
     {
+        // Log the incoming request for debugging
+        \Log::info('Admin assigning inspector', [
+            'request_id' => $inspectionRequest->id,
+            'request_data' => $request->all(),
+            'user_id' => auth()->id()
+        ]);
+
         $validator = Validator::make($request->all(), [
             'inspector_id' => 'required|exists:inspectors,id',
-            'scheduled_date' => 'required|date|after:today',
+            'scheduled_date' => 'required|date|after_or_equal:today',
             'scheduled_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string|max:500',
         ]);
@@ -455,7 +462,17 @@ class InspectionRequestController extends Controller
             ]);
 
             // Update inspector status
-            $inspector->update(['availability_status' => 'busy']);
+            $inspector->setBusy();
+
+            // Log the status change
+            \App\Models\InspectionStatusHistory::create([
+                'inspection_request_id' => $inspectionRequest->id,
+                'old_status' => 'pending',
+                'new_status' => 'assigned',
+                'changed_by' => auth()->id(),
+                'change_reason' => "Inspector assigned by admin: " . ($inspector->user->full_name ?? 'Inspector ' . $inspector->id) . ($request->notes ? " - Notes: " . $request->notes : ""),
+                'changed_at' => now()
+            ]);
 
             DB::commit();
 

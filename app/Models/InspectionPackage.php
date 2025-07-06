@@ -71,6 +71,14 @@ class InspectionPackage extends Model
         return $this->hasMany(InspectionRequest::class, 'package_id');
     }
 
+    /**
+     * The tiers that allow this package.
+     */
+    public function tiers(): BelongsToMany
+    {
+        return $this->belongsToMany(Tier::class, 'tier_inspection_package');
+    }
+
     // =============================================
     // SCOPES
     // =============================================

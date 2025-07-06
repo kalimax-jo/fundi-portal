@@ -33,9 +33,19 @@ class Property extends Model
         'bedrooms_count',
         'bathrooms_count',
         'market_value',
+        'status',
         'last_inspection_date',
         'property_photos',
-        'additional_notes'
+        'additional_notes',
+        'city',
+        'state',
+        'postal_code',
+        'country',
+        'year_built',
+        'description',
+        'client_national_id',
+        'client_name',
+        'business_partner_id',
     ];
 
     /**
@@ -69,6 +79,14 @@ class Property extends Model
     {
         return $this->hasMany(InspectionRequest::class)
             ->where('status', 'completed');
+    }
+
+    /**
+     * Get the client user associated with this property
+     */
+    public function clientUser()
+    {
+        return $this->belongsTo(User::class, 'client_national_id', 'national_id');
     }
 
     // =============================================

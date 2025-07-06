@@ -184,7 +184,7 @@
                                     @endif
                                     
                                     <!-- Show permissions for this role -->
-                                    @if($role->permissions && count($role->permissions) > 0)
+                                    @if(is_array($role->permissions) && count($role->permissions) > 0)
                                         <div class="mt-2">
                                             <p class="text-xs text-gray-600 font-medium">Permissions:</p>
                                             <div class="mt-1 flex flex-wrap gap-1">
@@ -193,7 +193,7 @@
                                                         {{ str_replace('_', ' ', $permission) }}
                                                     </span>
                                                 @endforeach
-                                                @if(count($role->permissions) > 5)
+                                                @if(is_array($role->permissions) && count($role->permissions) > 5)
                                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                                                         +{{ count($role->permissions) - 5 }} more
                                                     </span>

@@ -338,63 +338,6 @@
             </div>
         </div>
 
-        <!-- System & Sync -->
-        <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-            <div class="md:grid md:grid-cols-3 md:gap-6">
-                <div class="md:col-span-1">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">System & Sync</h3>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Configure deployment type and data synchronization settings.
-                    </p>
-                </div>
-                <div class="mt-5 md:col-span-2 md:mt-0">
-                    <div class="grid grid-cols-6 gap-6">
-
-                        <!-- Deployment Type -->
-                        <div class="col-span-6 sm:col-span-3">
-                            <label for="deployment_type" class="block text-sm font-medium text-gray-700">Deployment Type</label>
-                            <select name="deployment_type" id="deployment_type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                <option value="centralized" {{ old('deployment_type', $businessPartner->deployment_type) == 'centralized' ? 'selected' : '' }}>Centralized</option>
-                                <option value="dedicated" {{ old('deployment_type', $businessPartner->deployment_type) == 'dedicated' ? 'selected' : '' }}>Dedicated</option>
-                            </select>
-                        </div>
-
-                        <!-- Failover Active -->
-                        <div class="col-span-6 sm:col-span-3 flex items-center pt-6">
-                            <div class="flex items-center">
-                                <input id="failover_active" name="failover_active" type="checkbox" value="1" {{ old('failover_active', $businessPartner->failover_active) ? 'checked' : '' }} class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                <label for="failover_active" class="ml-2 block text-sm font-medium text-gray-900">Failover Active</label>
-                            </div>
-                        </div>
-
-                        <!-- Sync Settings -->
-                        <div id="sync-settings" class="col-span-6 grid grid-cols-6 gap-6" style="{{ old('deployment_type', $businessPartner->deployment_type) == 'dedicated' ? '' : 'display: none;' }}">
-                            <!-- Sync URL -->
-                            <div class="col-span-6">
-                                <label for="sync_url" class="block text-sm font-medium text-gray-700">Sync URL</label>
-                                <input type="url" name="sync_url" id="sync_url" value="{{ old('sync_url', $businessPartner->sync_url) }}" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-
-                            <!-- API Key -->
-                            <div class="col-span-6 sm:col-span-3">
-                                <label for="api_key" class="block text-sm font-medium text-gray-700">API Key</label>
-                                <input type="text" name="api_key" id="api_key" value="{{ old('api_key', $businessPartner->api_key) }}" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                            </div>
-
-                            <!-- Sync Type -->
-                            <div class="col-span-6 sm:col-span-3">
-                                <label for="sync_type" class="block text-sm font-medium text-gray-700">Sync Type</label>
-                                <select name="sync_type" id="sync_type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                    <option value="public_api" {{ old('sync_type', $businessPartner->sync_type) == 'public_api' ? 'selected' : '' }}>Public API</option>
-                                    <option value="vpn" {{ old('sync_type', $businessPartner->sync_type) == 'vpn' ? 'selected' : '' }}>VPN</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Partnership Statistics (Read-only) -->
         <div class="bg-gray-50 shadow px-4 py-5 sm:rounded-lg sm:p-6">
             <div class="md:grid md:grid-cols-3 md:gap-6">
@@ -752,22 +695,6 @@ document.getElementById('discount_percentage').addEventListener('input', functio
         alert('Discount percentage cannot be negative');
         this.value = 0;
     }
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    const deploymentType = document.getElementById('deployment_type');
-    const syncSettings = document.getElementById('sync-settings');
-
-    deploymentType.addEventListener('change', function() {
-        if (this.value === 'dedicated') {
-            syncSettings.style.display = 'grid';
-        } else {
-            syncSettings.style.display = 'none';
-        }
-    });
-
-    // Trigger change on load to set initial state
-    deploymentType.dispatchEvent(new Event('change'));
 });
 </script>
 @endpush

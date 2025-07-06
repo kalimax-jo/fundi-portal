@@ -15,22 +15,28 @@ class AssignHeadTechnicianRoleSeeder extends Seeder
      */
     public function run()
     {
-        // Change this email to your own user email if needed
-        $userEmail = 'admin@example.com';
+        // Create a dedicated Head Technician User
+        $headTechEmail = 'headtech@fundi.com';
 
-        $user = User::where('email', $userEmail)->first();
-        if (!$user) {
-            $this->command->error("User with email {$userEmail} not found.");
-            return;
-        }
+        $headTechUser = User::firstOrCreate(
+            ['email' => $headTechEmail],
+            [
+                'first_name' => 'Head',
+                'last_name' => 'Technician',
+                'password' => bcrypt('password'),
+                'status' => 'active',
+            ]
+        );
 
-        $role = Role::firstOrCreate(['name' => 'head_technician'], ['display_name' => 'Head Technician']);
+        $role = Role::where('name', 'head_technician')->first();
 
-        if (!$user->roles->contains($role->id)) {
-            $user->roles()->attach($role->id);
-            $this->command->info("Assigned 'head_technician' role to user {$user->email}.");
+        if ($role && !$headTechUser->roles->contains($role->id)) {
+            $headTechUser->roles()->attach($role->id);
+            $this->command->info("Created Head Technician user ({$headTechEmail}) and assigned role.");
+        } else if (!$role) {
+            $this->command->error('Head Technician role not found. Please run RoleSeeder first.');
         } else {
-            $this->command->info("User {$user->email} already has 'head_technician' role.");
+            $this->command->info("Head Technician user ({$headTechEmail}) already has the role.");
         }
     }
 } 

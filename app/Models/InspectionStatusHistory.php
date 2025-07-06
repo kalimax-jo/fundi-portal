@@ -158,4 +158,91 @@ class InspectionStatusHistory extends Model
 
         return $summary;
     }
+
+    /**
+     * Get enhanced activity description with proper names
+     */
+    public function getActivityDescription(): string
+    {
+        $requestNumber = $this->inspectionRequest->request_number ?? 'Request #' . $this->inspection_request_id;
+        $changedBy = $this->changedByUser->full_name ?? 'Unknown User';
+        
+        // Handle different types of activities
+        if ($this->isInitialStatus()) {
+            return "{$requestNumber} — Request created by {$changedBy}";
+        }
+
+        // Handle status changes
+        $oldStatus = $this->getOldStatusDisplayName();
+        $newStatus = $this->getNewStatusDisplayName();
+        
+        if ($oldStatus === $newStatus) {
+            // Same status but with reason (like reassignment)
+            if ($this->change_reason) {
+                return "{$requestNumber} — {$this->change_reason} by {$changedBy}";
+            }
+            return "{$requestNumber} — Status updated by {$changedBy}";
+        }
+
+        // Different statuses
+        $description = "{$requestNumber} — Status changed from {$oldStatus} to {$newStatus}";
+        
+        if ($this->change_reason) {
+            $description .= " - {$this->change_reason}";
+        }
+        
+        $description .= " by {$changedBy}";
+        
+        return $description;
+    }
+
+    /**
+     * Get activity icon based on status change
+     */
+    public function getActivityIcon(): string
+    {
+        if ($this->isInitialStatus()) {
+            return '📋'; // New request
+        }
+
+        switch ($this->new_status) {
+            case 'assigned':
+                return '👤'; // Assigned to inspector
+            case 'in_progress':
+                return '🔍'; // Inspection in progress
+            case 'completed':
+                return '✅'; // Completed
+            case 'cancelled':
+                return '❌'; // Cancelled
+            case 'on_hold':
+                return '⏸️'; // On hold
+            default:
+                return '📝'; // General update
+        }
+    }
+
+    /**
+     * Get activity color class
+     */
+    public function getActivityColorClass(): string
+    {
+        if ($this->isInitialStatus()) {
+            return 'text-blue-600';
+        }
+
+        switch ($this->new_status) {
+            case 'assigned':
+                return 'text-green-600';
+            case 'in_progress':
+                return 'text-yellow-600';
+            case 'completed':
+                return 'text-green-700';
+            case 'cancelled':
+                return 'text-red-600';
+            case 'on_hold':
+                return 'text-orange-600';
+            default:
+                return 'text-gray-600';
+        }
+    }
 } 

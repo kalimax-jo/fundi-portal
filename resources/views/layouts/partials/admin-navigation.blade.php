@@ -199,6 +199,12 @@
                                     Inspection Services
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{ route('admin.tiers.index') }}"
+                                   class="group flex gap-x-3 rounded-md py-2 pl-6 pr-2 text-sm leading-6 {{ request()->routeIs('admin.tiers.*') ? 'bg-indigo-700 text-white' : 'text-indigo-200 hover:text-white hover:bg-indigo-700' }}">
+                                    Tier Management
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </li>

@@ -15,7 +15,12 @@
         $isCompleted = $report->status === 'completed';
         $isEditMode = request()->has('edit') && $isCompleted;
         $isViewMode = $isCompleted && !$isEditMode;
-        $fieldsDisabled = $isViewMode ? 'disabled' : '';
+        if ($request->status === 'in_progress' && !$isEditMode) {
+            $isViewMode = false;
+            $fieldsDisabled = '';
+        } else {
+            $fieldsDisabled = $isViewMode ? 'disabled' : '';
+        }
     @endphp
 
     <form id="inspection-report-form" method="POST" action="{{ $isEditMode ? route('inspector.reports.update', $report->id) : route('inspector.reports.complete', $report->id) }}" enctype="multipart/form-data">

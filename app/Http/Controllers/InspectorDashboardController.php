@@ -214,11 +214,8 @@ class InspectorDashboardController extends Controller
             return redirect()->back()->with('error', 'Request not found or not eligible to start.');
         }
 
-        // Update the request status
-        $request->update([
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
+        // Start the inspection using the model method
+        $request->start();
 
         return redirect()->route('inspector.requests.report', $request->id)
             ->with('success', 'Inspection has been started. You can now fill out the report.');

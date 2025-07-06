@@ -250,7 +250,10 @@
                         <select name="access_level" id="access_level" 
                                 class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             <option value="">Select Access Level</option>
-                            <option value="admin">Admin - Full access to partner account</option>
+                            <option value="business_partner_admin">Business Partner Admin - Full access to partner account</option>
+                            <option value="loan_officer">Loan Officer - Create and manage inspection requests</option>
+                            <option value="billing_manager">Billing Manager - Manage billing and payments</option>
+                            <option value="property_manager">Property Manager - Manage properties and reports</option>
                             <option value="user">User - Standard access</option>
                             <option value="viewer">Viewer - Read-only access</option>
                         </select>
@@ -292,7 +295,10 @@
                         <label for="edit_access_level" class="block text-sm font-medium text-gray-700">Access Level</label>
                         <select name="access_level" id="edit_access_level" 
                                 class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                            <option value="admin">Admin - Full access to partner account</option>
+                            <option value="business_partner_admin">Business Partner Admin - Full access to partner account</option>
+                            <option value="loan_officer">Loan Officer - Create and manage inspection requests</option>
+                            <option value="billing_manager">Billing Manager - Manage billing and payments</option>
+                            <option value="property_manager">Property Manager - Manage properties and reports</option>
                             <option value="user">User - Standard access</option>
                             <option value="viewer">Viewer - Read-only access</option>
                         </select>

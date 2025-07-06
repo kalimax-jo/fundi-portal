@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -18,6 +19,7 @@ class BusinessPartner extends Model
      */
     protected $fillable = [
         'name',
+        'subdomain',
         'email',
         'phone',
         'website',
@@ -39,12 +41,7 @@ class BusinessPartner extends Model
         'billing_cycle',
         'discount_percentage',
         'credit_limit',
-        'notes',
-        'deployment_type',
-        'sync_url',
-        'api_key',
-        'sync_type',
-        'failover_active'
+        'notes'
     ];
 
     /**
@@ -85,6 +82,29 @@ class BusinessPartner extends Model
     public function billings(): HasMany
     {
         return $this->hasMany(PartnerBilling::class);
+    }
+
+    /**
+     * Get properties associated with this business partner through inspection requests
+     */
+    public function properties()
+    {
+        return $this->hasManyThrough(
+            Property::class, 
+            InspectionRequest::class,
+            'business_partner_id', // Foreign key on inspection_requests table
+            'id', // Foreign key on properties table
+            'id', // Local key on business_partners table
+            'property_id' // Local key on inspection_requests table
+        );
+    }
+
+    /**
+     * Get properties directly owned by this business partner
+     */
+    public function ownedProperties()
+    {
+        return $this->hasMany(Property::class, 'business_partner_id');
     }
 
     // =============================================
@@ -243,6 +263,52 @@ public function setPrimaryContact(User $user)
             'active_users_count' => $this->users()->count(),
             'admin_users_count' => $this->getAdminUsers()->count()
         ];
+    }
+
+    /**
+     * Get the full subdomain URL
+     */
+    public function getSubdomainUrlAttribute()
+    {
+        if (!$this->subdomain) {
+            return null;
+        }
+        
+        $domain = config('app.domain', 'fundi.info');
+        return "https://{$this->subdomain}.{$domain}";
+    }
+
+    /**
+     * Generate a unique subdomain from the business partner name
+     */
+    public function generateSubdomain()
+    {
+        $base = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $this->name));
+        $subdomain = $base;
+        $counter = 1;
+        
+        while (BusinessPartner::where('subdomain', $subdomain)->where('id', '!=', $this->id)->exists()) {
+            $subdomain = $base . $counter;
+            $counter++;
+        }
+        
+        return $subdomain;
+    }
+
+    /**
+     * Check if the business partner has a subdomain
+     */
+    public function hasSubdomain(): bool
+    {
+        return !empty($this->subdomain);
+    }
+
+    /**
+     * Get users with specific access level
+     */
+    public function getUsersByAccessLevel($accessLevel)
+    {
+        return $this->users()->wherePivot('access_level', $accessLevel);
     }
 
     // =============================================
@@ -405,6 +471,14 @@ public function setPrimaryContact(User $user)
         ];
 
         return $types[$this->type] ?? ucfirst($this->type);
+    }
+
+    /**
+     * Get the partner type display name (method version)
+     */
+    public function getTypeDisplayName(): string
+    {
+        return $this->getTypeDisplayNameAttribute();
     }
 
     /**

@@ -34,6 +34,13 @@
 <div class="max-w-4xl mx-auto py-8">
     <h2 class="text-xl font-semibold mb-4">Request Inspection</h2>
     
+    @php
+        $host = request()->getHost();
+        $mainDomain = 'fundi.info';
+        $subdomain = explode('.', $host)[0];
+        $isInstitutional = $host !== $mainDomain && str_ends_with($host, '.' . $mainDomain);
+    @endphp
+
     <form method="POST" action="{{ route('inspection-requests.store') }}" class="space-y-6">
         @csrf
 
@@ -310,7 +317,7 @@
 
         <!-- Form Actions -->
         <div class="flex justify-end space-x-3">
-            <a href="{{ route('dashboard') }}" 
+            <a href="{{ $isInstitutional ? route('institutional-partner.dashboard', ['subdomain' => $subdomain]) : route('dashboard') }}" 
                class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 Cancel
             </a>

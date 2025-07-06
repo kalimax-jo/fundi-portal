@@ -34,6 +34,16 @@ class DashboardController extends Controller
 
     public function assignments()
     {
+        // Debug: Check if user is authenticated and has correct role
+        $user = auth()->user();
+        if (!$user) {
+            abort(401, 'User not authenticated');
+        }
+        
+        if (!$user->isHeadTechnician() && !$user->isAdmin()) {
+            abort(403, 'Access denied. Head Technician privileges required.');
+        }
+
         // Fetch all requests, ordered by status and urgency
         $activities = \App\Models\InspectionRequest::with(['property', 'package', 'requester', 'inspector.user'])
             ->orderByRaw("
@@ -52,6 +62,12 @@ class DashboardController extends Controller
         $inspectors = \App\Models\Inspector::with('user')->available()->get();
         $allInspectors = \App\Models\Inspector::with('user')->get();
 
+        // Fetch recent activity for the sidebar
+        $recentActivity = \App\Models\InspectionStatusHistory::with(['inspectionRequest', 'changedByUser'])
+            ->orderByDesc('changed_at')
+            ->limit(15)
+            ->get();
+
         // Calculate statistics
         $stats = [
             'total_requests' => \App\Models\InspectionRequest::count(),
@@ -66,6 +82,7 @@ class DashboardController extends Controller
             'inspectors' => $inspectors,
             'allInspectors' => $allInspectors,
             'stats' => $stats,
+            'recentActivity' => $recentActivity,
         ]);
     }
 

@@ -80,9 +80,13 @@
                         @endif
                         <div class="mt-2 flex items-center text-sm text-gray-500">
                             <span>{{ $role->users_count }} {{ Str::plural('user', $role->users_count) }}</span>
-                            @if($role->permissions && count($role->permissions) > 0)
+                            @php
+                                $permissions = is_array($role->permissions) ? $role->permissions : [];
+                                $permissionCount = count($permissions);
+                            @endphp
+                            @if($permissionCount > 0)
                                 <span class="mx-2">•</span>
-                                <span>{{ count($role->permissions) }} {{ Str::plural('permission', count($role->permissions)) }}</span>
+                                <span>{{ $permissionCount }} {{ Str::plural('permission', $permissionCount) }}</span>
                             @endif
                         </div>
                     </div>

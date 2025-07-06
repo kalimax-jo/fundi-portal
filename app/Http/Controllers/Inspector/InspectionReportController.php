@@ -80,16 +80,8 @@ class InspectionReportController extends Controller
         $report->completed_at = now();
         $report->save();
 
-        // Mark the inspection request as completed
-        $inspectionRequest->status = 'completed';
-        $inspectionRequest->completed_at = now();
-        $inspectionRequest->save();
-
-        // Update the property's last_inspection_date
-        if ($inspectionRequest->property) {
-            $inspectionRequest->property->last_inspection_date = now();
-            $inspectionRequest->property->save();
-        }
+        // Mark the inspection request as completed using the model method
+        $inspectionRequest->complete();
 
         return redirect()->route('inspector.dashboard')->with('success', 'Inspection report completed.');
     }

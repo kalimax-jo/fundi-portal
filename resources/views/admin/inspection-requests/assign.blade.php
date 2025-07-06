@@ -308,7 +308,7 @@
                     <div>
                         <label for="scheduled_date" class="block text-sm font-medium text-gray-700">Inspection Date</label>
                         <input type="date" name="scheduled_date" id="scheduled_date" required
-                               min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                               min="{{ date('Y-m-d') }}"
                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                     </div>
                     <div>

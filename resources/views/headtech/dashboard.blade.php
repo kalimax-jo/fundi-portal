@@ -69,7 +69,7 @@
     <!-- Quick Links -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <a href="{{ route('headtech.assignments.index') }}" class="block bg-indigo-600 text-white rounded-lg shadow p-6 hover:bg-indigo-700 transition">
-            <div class="text-lg font-semibold mb-2">Assign Requests</div>
+            <div class="text-lg font-semibold mb-2">Assign Inspectors</div>
             <div class="text-xs">Quickly assign pending inspection requests to available inspectors.</div>
         </a>
         <a href="{{ route('headtech.inspectors.index') }}" class="block bg-blue-600 text-white rounded-lg shadow p-6 hover:bg-blue-700 transition">
@@ -84,23 +84,35 @@
     <!-- Recent Activity -->
     <div class="bg-white rounded shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Recent Activity</h2>
-        <ul class="text-sm text-gray-600 space-y-2">
+        <div class="space-y-3">
             @forelse($recentActivity as $activity)
-                <li class="flex items-center justify-between">
-                    <div>
-                        <span class="font-semibold text-indigo-700">{{ $activity->inspectionRequest->request_number ?? 'Request #' . $activity->inspection_request_id }}</span>
-                        <span class="mx-1">&mdash;</span>
-                        {{ $activity->getChangeSummary() }}
-                        @if($activity->changedByUser)
-                            <span class="text-xs text-gray-400">by {{ $activity->changedByUser->full_name ?? $activity->changedByUser->email }}</span>
-                        @endif
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex-shrink-0 text-xl">
+                        {{ $activity->getActivityIcon() }}
                     </div>
-                    <span class="text-xs text-gray-400 ml-2">{{ $activity->getTimeElapsed() }}</span>
-                </li>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm {{ $activity->getActivityColorClass() }} font-medium">
+                            {{ $activity->getActivityDescription() }}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            {{ $activity->getTimeElapsed() }}
+                        </p>
+                    </div>
+                </div>
             @empty
-                <li>No recent activity.</li>
+                <div class="text-center py-8 text-gray-500">
+                    <div class="text-4xl mb-2">📋</div>
+                    <p>No recent activity</p>
+                </div>
             @endforelse
-        </ul>
+        </div>
+        @if($recentActivity->count() > 0)
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <a href="{{ route('headtech.assignments.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                    View all activities →
+                </a>
+            </div>
+        @endif
     </div>
     </div>
 @endsection 

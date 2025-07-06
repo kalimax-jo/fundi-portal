@@ -373,7 +373,7 @@
                 <div>
                     <label for="scheduled_date" class="block text-sm font-medium text-gray-700">Scheduled Date</label>
                     <input type="date" name="scheduled_date" id="scheduled_date" 
-                           min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                           min="{{ date('Y-m-d') }}"
                            class="mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm">
                 </div>
                 <div>

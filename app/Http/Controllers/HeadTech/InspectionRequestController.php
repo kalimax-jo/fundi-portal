@@ -187,13 +187,13 @@ class InspectionRequestController extends Controller
                 throw new \Exception('Inspector is offline and cannot be assigned.');
             }
 
+            // Use the model's assignInspector method
+            $inspectionRequest->assignInspector($inspector, auth()->user());
+            
+            // Update scheduling information
             $inspectionRequest->update([
-                'assigned_inspector_id' => $request->inspector_id,
-                'assigned_by' => auth()->id(),
-                'assigned_at' => now(),
                 'scheduled_date' => $request->scheduled_date,
                 'scheduled_time' => $request->scheduled_time,
-                'status' => 'assigned'
             ]);
 
             \DB::commit();
@@ -224,21 +224,23 @@ class InspectionRequestController extends Controller
             'assigned_inspector_id' => 'required|exists:inspectors,id',
         ]);
 
-        $originalInspectorId = $inspectionRequest->assigned_inspector_id;
-        $newInspectorId = $request->input('assigned_inspector_id');
+        $originalInspector = $inspectionRequest->inspector;
+        $newInspector = Inspector::findOrFail($request->input('assigned_inspector_id'));
 
         // Update the inspector
-        $inspectionRequest->assigned_inspector_id = $newInspectorId;
+        $inspectionRequest->assigned_inspector_id = $newInspector->id;
         $inspectionRequest->save();
 
-        // Log the change
-        InspectionStatusHistory::create([
-            'inspection_request_id' => $inspectionRequest->id,
-            'old_status' => $inspectionRequest->status,
-            'new_status' => $inspectionRequest->status,
-            'changed_by' => auth()->id(),
-            'change_reason' => "Inspector reassigned from Inspector ID: {$originalInspectorId} to ID: {$newInspectorId}.",
-        ]);
+        // Log the reassignment with inspector names
+        $originalName = $originalInspector ? $originalInspector->user->full_name : 'Unassigned';
+        $newName = $newInspector->user->full_name;
+        
+        $inspectionRequest->recordStatusChange(
+            $inspectionRequest->status, 
+            $inspectionRequest->status, 
+            auth()->id(),
+            "Inspector reassigned from {$originalName} to {$newName}"
+        );
 
         return redirect()->route('headtech.assignments.index')->with('success', 'Inspector has been successfully reassigned.');
     }
@@ -256,39 +258,5 @@ class InspectionRequestController extends Controller
         $pdf = Pdf::loadView('inspectors.reports.pdf', compact('report', 'services'));
         
         return $pdf->download('inspection-report-'.$report->inspectionRequest->request_number.'.pdf');
-    }
-
-    public function assign(Request $request)
-    {
-        // Get pending requests
-        $pendingRequests = \App\Models\InspectionRequest::with([
-            'requester',
-            'property',
-            'package',
-            'businessPartner'
-        ])
-        ->where('status', 'pending')
-        ->orderByRaw("FIELD(urgency, 'emergency', 'urgent', 'normal')")
-        ->orderBy('created_at')
-        ->get();
-
-        // Get available inspectors
-        $availableInspectors = \App\Models\Inspector::with(['user'])
-            ->where('availability_status', 'available')
-            ->orderBy('rating', 'desc')
-            ->get();
-
-        // Get assignment statistics
-        $stats = [
-            'pending_requests' => $pendingRequests->count(),
-            'available_inspectors' => $availableInspectors->count(),
-            'urgent_requests' => $pendingRequests->whereIn('urgency', ['urgent', 'emergency'])->count(),
-        ];
-
-        return view('headtech.inspection-requests.assign', compact(
-            'pendingRequests',
-            'availableInspectors',
-            'stats'
-        ));
     }
 } 

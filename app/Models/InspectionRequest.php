@@ -328,18 +328,18 @@ class InspectionRequest extends Model
                 ->orWhereHas('property', function ($propQ) use ($term) {
                     $propQ->where('street_address', 'like', "%{$term}%")
                           ->orWhere('city', 'like', "%{$term}%");
-              })
+                })
                 ->orWhereHas('requester', function ($userQ) use ($term) {
                     $userQ->where('first_name', 'like', "%{$term}%")
                           ->orWhere('last_name', 'like', "%{$term}%");
-              });
+                });
         });
     }
 
     // =============================================
     // HELPERS & LOGIC
     // =============================================
-
+    
     /**
      * Generate a unique request number
      */
@@ -385,7 +385,7 @@ class InspectionRequest extends Model
     {
         return ucwords(str_replace('_', ' ', $this->payment_status));
     }
-
+    
     /**
      * Check if request is from a business partner
      */
@@ -495,11 +495,14 @@ class InspectionRequest extends Model
     {
         $oldStatus = $this->status;
 
+        // Only use allowed enum values for payment_status
+        $newPaymentStatus = $this->requester_type === 'business_partner' ? 'pending' : 'paid';
+
         $this->update([
             'status' => 'completed',
             'completed_at' => now(),
             'total_cost' => $totalCost ?? $this->total_cost,
-            'payment_status' => $this->requester_type === 'business_partner' ? 'invoiced' : 'paid',
+            'payment_status' => $newPaymentStatus, // fixed: must be 'pending', 'partial', 'paid', or 'refunded'
         ]);
 
         $this->recordStatusChange($oldStatus, 'completed', $this->assigned_inspector_id, 'Inspection completed');
@@ -523,7 +526,7 @@ class InspectionRequest extends Model
     public function cancel(User $cancelledBy, string $reason = null): void
     {
         $oldStatus = $this->status;
-        
+
         $this->update([
             'status' => 'cancelled',
         ]);
@@ -566,17 +569,17 @@ class InspectionRequest extends Model
         }
         return now()->diffInDays($this->preferred_date, false);
     }
-
+    
     /**
      * Record a status change in the history table
      */
-    private function recordStatusChange(?string $oldStatus, string $newStatus, int $changedBy, string $reason = null): void
+    public function recordStatusChange(?string $oldStatus, string $newStatus, int $changedBy, string $reason = null): void
     {
         $this->statusHistory()->create([
             'old_status' => $oldStatus,
             'new_status' => $newStatus,
             'changed_by' => $changedBy,
-            'notes' => $reason
+            'change_reason' => $reason
         ]);
     }
 
@@ -599,7 +602,7 @@ class InspectionRequest extends Model
             'cost' => $this->total_cost,
         ];
     }
-
+    
     /**
      * Boot method for the model.
      */
@@ -616,6 +619,34 @@ class InspectionRequest extends Model
             }
             if (empty($model->payment_status)) {
                 $model->payment_status = 'pending';
+            }
+        });
+
+        // Record initial status change when request is created
+        static::created(function ($model) {
+            $model->recordStatusChange(null, $model->status, $model->requester_user_id, 'Request created');
+        });
+
+        // Record status changes when status is updated
+        static::updating(function ($model) {
+            if ($model->isDirty('status')) {
+                $oldStatus = $model->getOriginal('status');
+                $newStatus = $model->status;
+                $changedBy = auth()->id() ?? $model->requester_user_id;
+                
+                // Determine the reason for the status change
+                $reason = null;
+                if ($newStatus === 'assigned' && $model->isDirty('assigned_inspector_id')) {
+                    $reason = 'Inspector assigned';
+                } elseif ($newStatus === 'in_progress') {
+                    $reason = 'Inspection started';
+                } elseif ($newStatus === 'completed') {
+                    $reason = 'Inspection completed';
+                } elseif ($newStatus === 'cancelled') {
+                    $reason = 'Request cancelled';
+                }
+                
+                $model->recordStatusChange($oldStatus, $newStatus, $changedBy, $reason);
             }
         });
     }

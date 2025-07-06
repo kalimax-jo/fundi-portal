@@ -26,7 +26,8 @@ class User extends Authenticatable
         'last_name',
         'profile_photo',
         'status',
-        'last_login_at'
+        'last_login_at',
+        'created_by',
     ];
 
     /**
@@ -71,6 +72,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's institutional partner associations
+     */
+    public function institutionalPartners(): BelongsToMany
+    {
+        return $this->belongsToMany(InstitutionalPartner::class, 'institutional_partner_users')
+            ->withPivot('position', 'department', 'access_level', 'is_primary_contact')
+            ->withTimestamps();
+    }
+
+    /**
      * Get the inspector profile if user is an inspector
      */
     public function inspector(): HasOne
@@ -100,6 +111,46 @@ class User extends Authenticatable
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    /**
+     * Get the user who created this user
+     */
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get users created by this user
+     */
+    public function createdUsers()
+    {
+        return $this->hasMany(User::class, 'created_by');
+    }
+
+    /**
+     * Get the institutional partner this user belongs to
+     */
+    public function institutionalPartner()
+    {
+        return $this->belongsTo(InstitutionalPartner::class, 'institutional_partner_id');
+    }
+
+    /**
+     * Check if user is a client (created by an institutional user)
+     */
+    public function isClient()
+    {
+        return !is_null($this->created_by);
+    }
+
+    /**
+     * Check if user is an institutional user (not a client)
+     */
+    public function isInstitutionalUser()
+    {
+        return !is_null($this->institutional_partner_id) && is_null($this->created_by);
     }
 
     // =============================================
@@ -205,29 +256,64 @@ class User extends Authenticatable
     }
 
     /**
-     * Get business partners this user belongs to
+     * Get user's business partners list
      */
     public function getBusinessPartnersList()
     {
-        return $this->businessPartners()->get();
+        return $this->businessPartners()->pluck('name', 'id');
     }
 
     /**
-     * Check if user can access business partner features
+     * Get user's institutional partners list
+     */
+    public function getInstitutionalPartnersList()
+    {
+        return $this->institutionalPartners()->pluck('name', 'id');
+    }
+
+    /**
+     * Check if user can access business features
      */
     public function canAccessBusinessFeatures(): bool
     {
-        return $this->isBusinessPartner() || $this->isAdmin() || $this->isHeadTechnician();
+        return $this->businessPartners()->exists();
     }
 
     /**
-     * Get user's primary business partner (if any)
+     * Check if user can access institutional partner features
+     */
+    public function canAccessInstitutionalFeatures(): bool
+    {
+        return $this->institutionalPartners()->exists();
+    }
+
+    /**
+     * Get primary business partner
      */
     public function getPrimaryBusinessPartner()
     {
-        return $this->businessPartners()
-            ->wherePivot('is_primary_contact', true)
-            ->first();
+        return $this->businessPartners()->wherePivot('is_primary_contact', true)->first();
+    }
+
+    /**
+     * Get primary institutional partner
+     */
+    public function getPrimaryInstitutionalPartner()
+    {
+        return $this->institutionalPartners()->wherePivot('is_primary_contact', true)->first();
+    }
+
+    /**
+     * Get current institutional partner based on subdomain
+     */
+    public function getCurrentInstitutionalPartner()
+    {
+        $subdomain = request()->getHost();
+        if (str_contains($subdomain, '.')) {
+            $subdomain = explode('.', $subdomain)[0];
+        }
+        
+        return $this->institutionalPartners()->where('subdomain', $subdomain)->first();
     }
 
     /**
@@ -281,5 +367,21 @@ class User extends Authenticatable
             }
         }
         return false;
+    }
+
+    /**
+     * Check if user is an institutional partner
+     */
+    public function isInstitutionalPartner(): bool
+    {
+        return $this->hasRole('institutional_partner');
+    }
+
+    /**
+     * Check if user is an institutional partner user (has access to institutional partner portal)
+     */
+    public function isInstitutionalPartnerUser(): bool
+    {
+        return $this->institutionalPartners()->exists();
     }
 }

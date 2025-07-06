@@ -378,7 +378,7 @@
                             </div>
                             <div class="text-right">
                                 <p class="text-sm font-medium text-gray-900">{{ number_format($payment->amount) }} {{ $payment->currency }}</p>
-                                <p class="text-xs text-gray-500">{{ $payment->created_at->diffForHumans() }}</p>
+                                <p class="text-xs text-gray-500">{{ $payment->initiated_at->diffForHumans() }}</p>
                             </div>
                         </div>
                     </li>

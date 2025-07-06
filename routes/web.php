@@ -5,13 +5,13 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InspectionRequestController as UserInspectionRequestController;
 
+// Admin login routes
+Route::get('/admin/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('admin.login.post');
+
 Route::get('/', function () {
     return view('welcome');
 });
-
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Authenticated user routes
 Route::middleware('auth')->group(function () {
@@ -27,6 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/inspection-requests/{inspectionRequest}', [UserInspectionRequestController::class, 'show'])->name('inspection-requests.show');
     Route::get('/inspection-requests/{inspectionRequest}/report/download', [UserInspectionRequestController::class, 'downloadReport'])->name('inspection-requests.report.download');
 });
+
+Route::get('admin/business-partners/check-subdomain', [App\Http\Controllers\Admin\BusinessPartnerController::class, 'checkSubdomain'])->name('admin.business-partners.check-subdomain');
 
 // Admin Routes (Protected by admin middleware)
 Route::middleware(['auth', 'role:admin,head_technician'])->prefix('admin')->name('admin.')->group(function () {
@@ -106,6 +108,9 @@ Route::middleware(['auth', 'role:admin,head_technician'])->prefix('admin')->name
     Route::get('reports/inspection-requests', [App\Http\Controllers\Admin\ReportController::class, 'inspectionRequests'])->name('reports.inspection-requests');
     Route::post('reports/generate', [App\Http\Controllers\Admin\ReportController::class, 'generate'])->name('reports.generate');
     Route::get('reports/export/{type}', [App\Http\Controllers\Admin\ReportController::class, 'export'])->name('reports.export');
+
+    // Tier Management
+    Route::resource('tiers', App\Http\Controllers\Admin\TierController::class);
 });
 
 // Head Technician Portal Routes (now outside admin group)
@@ -127,7 +132,6 @@ Route::middleware(['auth', 'role:head_technician'])->prefix('ht')->name('headtec
     Route::get('services/analytics', [\App\Http\Controllers\HeadTech\ServiceController::class, 'analytics'])->name('services.analytics');
     Route::post('services/{service}/toggle-status', [\App\Http\Controllers\HeadTech\ServiceController::class, 'toggleStatus'])->name('services.toggle-status');
 
-    Route::get('inspection-requests/assign', [\App\Http\Controllers\HeadTech\InspectionRequestController::class, 'assign'])->name('inspection-requests.assign-page');
     Route::post('inspection-requests/{inspectionRequest}/assign', [\App\Http\Controllers\HeadTech\InspectionRequestController::class, 'assignInspector'])->name('inspection-requests.assign');
     Route::post('inspection-requests/{inspectionRequest}/reassign', [\App\Http\Controllers\HeadTech\InspectionRequestController::class, 'reassignInspector'])->name('inspection-requests.reassign');
     // Assignments placeholder
@@ -150,6 +154,24 @@ Route::middleware(['role:head_technician'])->get('/test-role', function () {
     return 'Role middleware works!';
 });
 
+// Test route for authentication debugging
+Route::get('/test-auth-debug', function () {
+    $user = auth()->user();
+    return response()->json([
+        'authenticated' => auth()->check(),
+        'user' => $user ? [
+            'id' => $user->id,
+            'name' => $user->full_name,
+            'email' => $user->email,
+            'roles' => $user->roles->pluck('name'),
+            'is_head_technician' => $user->isHeadTechnician(),
+            'is_admin' => $user->isAdmin(),
+        ] : null,
+        'session_id' => session()->getId(),
+        'session_data' => session()->all(),
+    ]);
+});
+
 // Inspector Portal
 Route::middleware(['auth', 'role:inspector'])->prefix('inspector')->name('inspector.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\InspectorDashboardController::class, 'index'])->name('dashboard');
@@ -170,4 +192,32 @@ Route::middleware(['auth', 'role:inspector'])->prefix('inspector')->name('inspec
     Route::post('/settings/profile', [\App\Http\Controllers\InspectorDashboardController::class, 'updateProfile'])->name('settings.profile.update');
     Route::post('/settings/password', [\App\Http\Controllers\InspectorDashboardController::class, 'updatePassword'])->name('settings.password.update');
     Route::post('/settings/availability', [\App\Http\Controllers\InspectorDashboardController::class, 'toggleAvailability'])->name('settings.availability.toggle');
+});
+
+// Test route for business partner subdomain debugging
+Route::get('/test-subdomain', function () {
+    return response()->json([
+        'host' => request()->getHost(),
+        'subdomain' => explode('.', request()->getHost())[0],
+        'current_business_partner' => session('current_business_partner'),
+        'business_partner_from_request' => request()->attributes->get('business_partner'),
+        'session_id' => session()->getId(),
+    ]);
+})->name('test.subdomain');
+
+// Generic login routes for super admin, individual client, technician, and head technician
+Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
+
+// Generic logout route for main app users
+Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+
+Route::get('/plain-test', function () {
+    return 'It works!';
+});
+
+// Partner Billing
+Route::middleware(['auth', 'role:business_partner'])->prefix('partner')->name('partner.')->group(function () {
+    Route::get('billing', [\App\Http\Controllers\Partner\BillingController::class, 'index'])->name('billing');
+    Route::post('billing/select-tier/{tier}', [\App\Http\Controllers\Partner\BillingController::class, 'selectTier'])->name('billing.select-tier');
 });
