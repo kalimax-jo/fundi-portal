@@ -94,7 +94,7 @@ class DetectPartnerSubdomain
         }
 
         // If not a partner subdomain, just continue (main portal logic applies)
->>>>>>> f3f553adc2312b7a328cf2f46b47fe8c269a62c6
+
         return $next($request);
     }
 } 
