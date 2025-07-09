@@ -5,488 +5,483 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Property Inspection Report - {{ $report->inspectionRequest->request_number }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        @media print {
-            body { margin: 0; }
-            .container { padding: 8px; }
-            .no-print { display: none; }
-        }
-        
-        * {
+        body { 
+            font-family: Arial, sans-serif;
+            color: #000;
+            background: #fff;
+            line-height: 1.2;
+            font-size: 11px;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body { 
-            font-family: 'Inter', sans-serif;
-            color: #2d3748;
-            background: #ffffff;
-            line-height: 1.5;
         }
         
         .container { 
-            max-width: 800px; 
-            margin: 20px auto; 
-            background: white;
-            border: 2px solid #2d3748;
-            position: relative;
+            width: 100%;
+            border: 2px solid #000;
         }
         
-        .header-section {
+        .header {
             text-align: center;
-            padding: 30px 40px 20px;
-            border-bottom: 2px solid #2d3748;
+            padding: 20px;
+            border-bottom: 2px solid #000;
         }
         
         .header-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2d3748;
+            font-size: 18px;
+            font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 5px;
         }
         
         .header-subtitle {
-            font-size: 18px;
-            font-weight: 500;
-            color: #2d3748;
-            margin-bottom: 20px;
+            font-size: 12px;
+            margin-bottom: 3px;
         }
         
-        .document-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #4a5568;
+        .document-info-table {
+            width: 100%;
+            font-size: 9px;
+            margin-top: 15px;
         }
         
         .certificate-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #2d3748;
+            font-size: 18px;
+            font-weight: bold;
             text-align: center;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin: 30px 0;
-            padding: 20px 0;
-            border-top: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
+            margin: 15px 0;
+            padding: 12px 0;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
         }
         
-        .content-section {
-            padding: 0 40px;
+        .content {
+            padding: 0 20px 20px 20px;
         }
         
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin: 30px 0;
+        .main-section-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
         }
         
-        .info-column h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 15px;
+        .main-section-table td {
+            vertical-align: top;
+            padding: 0 15px;
+        }
+        
+        .section-header {
+            font-size: 12px;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
         }
         
-        .info-row {
-            display: flex;
-            margin-bottom: 8px;
-            font-size: 14px;
+        .info-item {
+            margin-bottom: 6px;
+            font-size: 10px;
         }
         
         .info-label {
-            font-weight: 500;
-            color: #4a5568;
-            min-width: 120px;
-            margin-right: 10px;
+            color: #666;
+            font-weight: bold;
+            margin-bottom: 2px;
         }
         
         .info-value {
-            font-weight: 400;
-            color: #2d3748;
-            flex: 1;
+            color: #000;
+            margin-bottom: 8px;
         }
         
-        .full-width-section {
-            margin: 30px 0;
+        .tag {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
         }
         
         .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 15px;
+            font-size: 12px;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin: 15px 0 10px 0;
+            border-bottom: 1px solid #000;
+            padding-bottom: 3px;
+        }
+        
+        .property-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            table-layout: fixed;
+        }
+        
+        .property-info-table td {
+            vertical-align: top;
+            padding: 0 10px 0 0;
+            width: 50%;
+        }
+        
+        .client-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin: 10px 0;
+        }
+        
+        .client-table th {
+            background: #f8f8f8;
+            padding: 8px;
+            border: 1px solid #000;
+            font-weight: bold;
+            font-size: 10px;
+            text-align: left;
+            width: 35%;
+        }
+        
+        .client-table td {
+            padding: 8px;
+            border: 1px solid #000;
+            font-size: 10px;
+            width: 65%;
         }
         
         .findings-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #000;
+            margin: 10px 0;
         }
         
         .findings-table th {
-            background: #f8fafc;
-            padding: 12px;
+            background: #f8f8f8;
+            padding: 8px;
+            border: 1px solid #000;
+            font-weight: bold;
+            font-size: 10px;
             text-align: left;
-            font-weight: 600;
-            color: #2d3748;
-            font-size: 14px;
-            border-bottom: 1px solid #e2e8f0;
         }
         
         .findings-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 13px;
+            padding: 8px;
+            border: 1px solid #000;
+            font-size: 9px;
             vertical-align: top;
         }
         
-        .findings-table tr:last-child td {
-            border-bottom: none;
+        .findings-table th:nth-child(1),
+        .findings-table td:nth-child(1) {
+            width: 30%;
         }
         
-        .modern-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            border: 1px solid #e2e8f0;
+        .findings-table th:nth-child(2),
+        .findings-table td:nth-child(2) {
+            width: 55%;
         }
         
-        .modern-table th {
-            background: #f8fafc;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #2d3748;
-            font-size: 14px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .modern-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 14px;
-        }
-        
-        .modern-table tr:last-child td {
-            border-bottom: none;
+        .findings-table th:nth-child(3),
+        .findings-table td:nth-child(3) {
+            width: 110px;
+            text-align: center;
+            padding: 4px;
         }
         
         .service-photo {
-            max-width: 150px;
-            max-height: 100px;
-            margin-top: 8px;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
+            max-width: 50px;
+            max-height: 40px;
+            border: 1px solid #000;
+            display: block;
+            margin: 2px auto;
+        }
+        
+        .photo-link {
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            color: #000;
+        }
+        
+        .photo-link:hover {
+            opacity: 0.8;
+        }
+        
+        .photo-text {
+            font-size: 8px;
+            color: #666;
+            margin-top: 2px;
         }
         
         .assessment-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 20px;
+            background: #f8f8f8;
+            border: 1px solid #000;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 10px;
+        }
+        
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
             margin: 20px 0;
-            font-size: 14px;
-            line-height: 1.6;
+            border-top: 1px solid #000;
+            padding-top: 15px;
         }
         
-        .signature-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin: 40px 0;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-        }
-        
-        .signature-box {
+        .signature-table td {
             text-align: center;
+            vertical-align: top;
+            padding: 0 20px;
         }
         
         .signature-line {
-            border-bottom: 1px solid #2d3748;
-            margin: 30px 0 10px;
-            height: 40px;
+            border-bottom: 1px solid #000;
+            height: 30px;
+            margin: 20px 0 8px 0;
         }
         
         .signature-label {
-            font-size: 12px;
-            color: #4a5568;
-            font-weight: 500;
+            font-size: 9px;
+            color: #666;
         }
         
-        .footer-section {
-            background: #f8fafc;
-            padding: 20px 40px;
-            border-top: 1px solid #e2e8f0;
-            font-size: 12px;
-            color: #4a5568;
+        .footer {
+            background: #f8f8f8;
+            padding: 12px 20px;
+            border-top: 1px solid #000;
             text-align: center;
+            font-size: 9px;
+            color: #666;
         }
         
         .verification-info {
-            margin-top: 10px;
-            font-size: 11px;
+            margin-top: 6px;
+            font-size: 8px;
         }
         
         .document-number {
-            font-weight: 600;
-            color: #2d3748;
-        }
-        
-        .tag {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            margin-right: 8px;
-            margin-bottom: 4px;
-        }
-        
-        .tag-primary {
-            background: #e0e7ff;
-            color: #3730a3;
-            border: 1px solid #c7d2fe;
-        }
-        
-        .tag-success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #9ae6b4;
-        }
-        
-        .tag-warning {
-            background: #fed7aa;
-            color: #9a3412;
-            border: 1px solid #f6e05e;
-        }
-        
-        .tag-danger {
-            background: #fecaca;
-            color: #991b1b;
-            border: 1px solid #fc8181;
-        }
-        
-        .tag-info {
-            background: #f0f9ff;
-            color: #0c4a6e;
-            border: 1px solid #7dd3fc;
+            font-weight: bold;
+            color: #000;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header Section -->
-        <div class="header-section">
+        <div class="header">
             <div class="header-title">Fundi.info</div>
             <div class="header-subtitle">Professional Property Inspection Services</div>
             <div class="header-subtitle">Certified Property Assessment Platform</div>
             
-            <div class="document-info">
-                <div>
-                    <strong>Issued by:</strong> Fundi.info Property Inspectors<br>
-                    <strong>On:</strong> {{ $report->created_at ? $report->created_at->format('d/m/Y') : 'N/A' }}
-                </div>
-                <div style="text-align: right;">
-                    <strong>Report validity</strong><br>
-                    <strong>Until:</strong> {{ $report->created_at ? $report->created_at->addYear()->format('d/m/Y') : 'N/A' }}
-                </div>
-            </div>
+            <table class="document-info-table">
+                <tr>
+                    <td style="text-align: left;">
+                        <strong>Issued by:</strong> Fundi.info Property Inspectors<br>
+                        <strong>On:</strong> {{ $report->created_at ? $report->created_at->format('d/m/Y') : 'N/A' }}
+                    </td>
+                    <td style="text-align: right;">
+                        <strong>Report validity</strong><br>
+                        <strong>Until:</strong> {{ $report->created_at ? $report->created_at->addYear()->format('d/m/Y') : 'N/A' }}
+                    </td>
+                </tr>
+            </table>
         </div>
 
-        <div class="content-section">
+        <div class="content">
             <!-- Certificate Title -->
             <div class="certificate-title">Property Inspection Report</div>
 
-            <!-- Basic Information Grid -->
-            <div class="info-grid">
-                <div class="info-column">
-                    <h3>Property Owner</h3>
-                    <div class="info-row">
-                        <span class="info-label">Name:</span>
-                        <span class="info-value">{{ $report->inspectionRequest->property->owner_name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Owner Phone:</span>
-                        <span class="info-value">{{ $report->inspectionRequest->property->owner_phone ?? 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Owner Email:</span>
-                        <span class="info-value">{{ $report->inspectionRequest->property->owner_email ?? 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Property Type:</span>
-                        <span class="info-value">
-                            <span class="tag tag-primary">{{ $report->inspectionRequest->property->property_type ?? 'N/A' }}</span>
-                            @if($report->inspectionRequest->property->property_subtype)
-                                <span class="tag tag-info">{{ $report->inspectionRequest->property->property_subtype }}</span>
-                            @endif
-                        </span>
-                    </div>
-                </div>
+            <!-- Main Information Section - Two Columns Using Table (NO VERTICAL LINE) -->
+            <table class="main-section-table">
+                <tr>
+                    <td style="width: 50%;">
+                        <div class="section-header">Property Owner</div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Name:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->owner_name ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Owner Phone:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->owner_phone ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Owner Email:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->owner_email ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Property Type:</div>
+                            <div class="info-value">
+                                <span class="tag">{{ ucfirst($report->inspectionRequest->property->property_type ?? 'N/A') }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="width: 50%;">
+                        <div class="section-header">Report Details</div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Report No:</div>
+                            <div class="info-value"><strong>{{ $report->inspectionRequest->request_number ?? 'N/A' }}</strong></div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Client Name:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->requester->full_name ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Inspection Date:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->scheduled_date ? $report->inspectionRequest->scheduled_date->format('d/m/Y') : 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Inspector:</div>
+                            <div class="info-value">{{ $report->inspector->user->full_name ?? 'N/A' }}</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
 
-                <div class="info-column">
-                    <h3>Report Details</h3>
-                    <div class="info-row">
-                        <span class="info-label">Report No:</span>
-                        <span class="info-value document-number">{{ $report->inspectionRequest->request_number ?? 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Client Name:</span>
-                        <span class="info-value">{{ $report->inspectionRequest->requester->full_name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Inspection Date:</span>
-                        <span class="info-value">{{ $report->inspectionRequest->scheduled_date ? $report->inspectionRequest->scheduled_date->format('d/m/Y') : 'N/A' }}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Inspector:</span>
-                        <span class="info-value">{{ $report->inspector->user->full_name ?? 'N/A' }}</span>
-                    </div>
-                </div>
-            </div>
+            <!-- Property Information Section -->
+            <div class="section-title">Property Information</div>
+            <table class="property-info-table">
+                <tr>
+                    <td style="width: 50%; vertical-align: top;">
+                        <div class="info-item">
+                            <div class="info-label">Address:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->address ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Location:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->cell ?? 'N/A' }}, {{ $report->inspectionRequest->property->sector ?? 'N/A' }}, {{ $report->inspectionRequest->property->district ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Construction Year:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->built_year ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Total Area:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->total_area_sqm ? number_format($report->inspectionRequest->property->total_area_sqm, 2) . ' m²' : 'N/A m²' }}</div>
+                        </div>
+                    </td>
+                    <td style="width: 50%; vertical-align: top;">
+                        <div class="info-item">
+                            <div class="info-label">Floors:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->floors_count ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Bedrooms:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->bedrooms_count ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Bathrooms:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->bathrooms_count ?? 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">Coordinates:</div>
+                            <div class="info-value">{{ $report->inspectionRequest->property->latitude ?? 'N/A' }}, {{ $report->inspectionRequest->property->longitude ?? 'N/A' }}</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
 
-            <!-- Property Information -->
-            <div class="full-width-section">
-                <div class="section-title">Property Information</div>
-                <div class="info-grid">
-                    <div class="info-column">
-                        <div class="info-row">
-                            <span class="info-label">Address:</span>
-                            <span class="info-value">{{ $report->inspectionRequest->property->address ?? 'N/A' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Location:</span>
-                            <span class="info-value">{{ $report->inspectionRequest->property->cell ?? 'N/A' }}, {{ $report->inspectionRequest->property->sector ?? 'N/A' }}, {{ $report->inspectionRequest->property->district ?? 'N/A' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Construction Year:</span>
-                            <span class="info-value">{{ $report->inspectionRequest->property->built_year ?? 'N/A' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Total Area:</span>
-                            <span class="info-value">{{ $report->inspectionRequest->property->total_area_sqm ?? 'N/A' }} m²</span>
-                        </div>
-                    </div>
-                    <div class="info-column">
-                        <div class="info-row">
-                            <span class="info-label">Floors:</span>
-                            <span class="info-value">{{ $report->inspectionRequest->property->floors_count ?? 'N/A' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Bedrooms:</span>
-                            <span class="info-value">{{ $report->inspectionRequest->property->bedrooms_count ?? 'N/A' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Bathrooms:</span>
-                            <span class="info-value">{{ $report->inspectionRequest->property->bathrooms_count ?? 'N/A' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Coordinates:</span>
-                            <span class="info-value">{{ $report->inspectionRequest->property->latitude ?? 'N/A' }}, {{ $report->inspectionRequest->property->longitude ?? 'N/A' }}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                @if($report->inspectionRequest->property->additional_notes)
-                <div class="info-row" style="margin-top: 15px;">
-                    <span class="info-label">Additional Notes:</span>
-                    <span class="info-value">{{ $report->inspectionRequest->property->additional_notes }}</span>
-                </div>
-                @endif
-            </div>
+            <!-- Client & Inspector Details Section -->
+            <div class="section-title">Client & Inspector Details</div>
+            <table class="client-table">
+                <tr><th>Client Name</th><td>{{ $report->inspectionRequest->requester->full_name ?? 'N/A' }}</td></tr>
+                <tr><th>Client Phone Number</th><td>{{ $report->inspectionRequest->requester->phone_number ?? 'N/A' }}</td></tr>
+                <tr><th>Inspector Name</th><td>{{ $report->inspector->user->full_name ?? 'N/A' }}</td></tr>
+                <tr><th>Inspector Contact</th><td>{{ $report->inspector->user->phone ?? 'N/A' }}</td></tr>
+                <tr><th>Inspection Package</th><td>{{ $report->inspectionRequest->package->display_name ?? 'N/A' }}</td></tr>
+                <tr><th>Date of Report</th><td>{{ $report->completed_at ? $report->completed_at->format('l, d F Y') : 'N/A' }}</td></tr>
+            </table>
 
-            <!-- Client Information -->
-            <div class="full-width-section">
-                <div class="section-title">Client & Inspector Details</div>
-                <table class="modern-table">
-                    <tr><th>Client Name</th><td>{{ $report->inspectionRequest->requester->full_name ?? 'N/A' }}</td></tr>
-                    <tr><th>Client Phone Number</th><td>{{ $report->inspectionRequest->requester->phone_number ?? 'N/A' }}</td></tr>
-                    <tr><th>Inspector Name</th><td>{{ $report->inspector->user->full_name ?? 'N/A' }}</td></tr>
-                    <tr><th>Inspector Contact</th><td>{{ $report->inspector->user->phone ?? 'N/A' }}</td></tr>
-                    <tr><th>Inspection Package</th><td>{{ $report->inspectionRequest->package->display_name ?? 'N/A' }}</td></tr>
-                    <tr><th>Date of Report</th><td>{{ $report->completed_at ? $report->completed_at->format('l, d F Y') : 'N/A' }}</td></tr>
-                </table>
-            </div>
-
-            <!-- Service Findings -->
+            <!-- Service Findings Section -->
             @if(isset($services) && count($services) > 0)
-            <div class="full-width-section">
-                <div class="section-title">Inspection Results</div>
-                <table class="findings-table">
-                    <thead>
-                        <tr>
-                            <th>Service Category</th>
-                            <th>Findings / Notes</th>
-                            <th>Photo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($services as $service)
-                        <tr>
-                            <td><strong>{{ $service->name }}</strong></td>
-                            <td>{{ $report->data['service_notes_'.$service->id] ?? 'No notes provided.' }}</td>
-                            <td>
-                                @if(isset($report->data['service_photo_'.$service->id]))
-                                    <img src="{{ storage_path('app/public/' . $report->data['service_photo_'.$service->id]) }}" alt="Service Photo" class="service-photo">
-                                @else
-                                    <span style="text-align: center;">-</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
+            <div class="section-title">Inspection Results</div>
+            <table class="findings-table">
+                <thead>
+                    <tr>
+                        <th>Service Category</th>
+                        <th>Findings / Notes</th>
+                        <th>Photo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach($services as $service)
+                    <tr>
+                        <td><strong>{{ $service->name }}</strong></td>
+                        <td>{{ $report->data['service_notes_'.$service->id] ?? 'No notes provided.' }}</td>
+                        <td>
+                            @if(isset($report->data['service_photo_'.$service->id]))
+                                @php
+                                    $photoPath = $report->data['service_photo_'.$service->id];
+                                    $photoUrl = asset('storage/' . $photoPath);
+                                @endphp
+                                <a href="{{ $photoUrl }}" class="photo-link" target="_blank">
+                                    <img src="{{ storage_path('app/public/' . $photoPath) }}" alt="Service Photo" class="service-photo">
+                                    <div class="photo-text">Click to view</div>
+                                </a>
+                            @else
+                                -
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
             @endif
 
-            <!-- Overall Assessment -->
-            <div class="full-width-section">
-                <div class="section-title">Overall Assessment</div>
-                <div class="assessment-box">
-                    <strong>General Comments:</strong><br>
-                    {{ $report->data['general_comments'] ?? 'No general comments provided.' }}
-                    <br><br>
-                    <strong>Report Summary:</strong> This property has been thoroughly inspected by our certified professionals and assessed according to industry best practices and construction standards. This inspection report is valid for one year from the date of issue and provides a comprehensive assessment of the property condition.
-                </div>
+            <!-- Overall Assessment Section -->
+            <div class="section-title">Overall Assessment</div>
+            <div class="assessment-box">
+                <strong>General Comments:</strong><br>
+                {{ $report->data['general_comments'] ?? 'No general comments provided.' }}
+                <br><br>
+                <strong>Report Summary:</strong> This property has been thoroughly inspected by our certified professionals and assessed according to industry best practices and construction standards. This inspection report is valid for one year from the date of issue and provides a comprehensive assessment of the property condition.
             </div>
 
             <!-- Signature Section -->
-            <div class="signature-section">
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-label">
-                        <strong>Property Inspector</strong><br>
-                        {{ $report->inspector->user->full_name ?? 'N/A' }}<br>
-                        License No: {{ $report->inspector->license_number ?? 'INS-2023-' . ($report->inspector->id ?? '000') }}
-                    </div>
-                </div>
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <div class="signature-label">
-                        <strong>Certified Inspector</strong><br>
-                        Property Inspection Department<br>
-                        Date: {{ $report->completed_at ? $report->completed_at->format('d/m/Y') : now()->format('d/m/Y') }}
-                    </div>
-                </div>
-            </div>
+            <table class="signature-table">
+                <tr>
+                    <td>
+                        <div class="signature-line"></div>
+                        <div class="signature-label">
+                            <strong>Property Inspector</strong><br>
+                            {{ $report->inspector->user->full_name ?? 'N/A' }}<br>
+                            License No: {{ $report->inspector->license_number ?? 'INS-2023-' . ($report->inspector->id ?? '000') }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="signature-line"></div>
+                        <div class="signature-label">
+                            <strong>Certified Inspector</strong><br>
+                            Property Inspection Department<br>
+                            Date: {{ $report->completed_at ? $report->completed_at->format('d/m/Y') : now()->format('d/m/Y') }}
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <!-- Footer Section -->
-        <div class="footer-section">
+        <div class="footer">
             <div>
                 <strong>Report issued by Fundi.info</strong><br>
                 Professional Property Inspection Services
